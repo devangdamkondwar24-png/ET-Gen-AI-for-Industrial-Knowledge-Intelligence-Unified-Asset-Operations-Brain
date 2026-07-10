@@ -64,9 +64,13 @@ docker exec etgen_ocr_worker python scripts/evaluate_retrieval.py
 
 ## System Workflow
 
-1. **Ingest:** A document is uploaded via API and sent to MinIO. Postgres tracks the job state (`pending`).
-2. **Parse:** The file is sent to Tika. If Tika fails (e.g., scanned PDF), the async OCR worker kicks in, converting pages to images and running Pytesseract.
-3. **Normalize & Chunk:** Text is cleaned, normalized, and split into boundary-aware chunks.
-4. **Embed:** `sentence-transformers` generates a 384-dimensional dense vector for each chunk.
-5. **Index:** Chunks + Vectors + Provenance (Page #, Asset Tag) are inserted into Elasticsearch.
-6. **Search & Generate:** A user asks a question via `/api/chat`. The system executes a Hybrid Search to find the top 5 chunks. The LLM generates a grounded response with strict source citations.
+**Pipeline:** `Ingest → Store → Parse → OCR fallback → Normalize → Chunk → Index → Search`
+
+1. **Ingest:** A document is uploaded via the API.
+2. **Store:** The raw file is securely saved to MinIO object storage. Postgres tracks the job state as `pending`.
+3. **Parse:** The document is routed to Apache Tika for fast, native text extraction.
+4. **OCR Fallback:** If Tika fails (e.g., scanned PDF) or returns insufficient text, the asynchronous OCR worker activates, converting pages to images and processing them via Pytesseract.
+5. **Normalize:** Extracted text is cleaned of artifacts, whitespace is standardized, and structural integrity is maintained.
+6. **Chunk:** The normalized text is split into boundary-aware hierarchical chunks (Paragraph -> Sentence -> Character) with deterministic overlapping.
+7. **Index:** `sentence-transformers` generates a 384-dimensional dense vector for each chunk. The text, vector, and provenance metadata (Page #, Asset Tag) are immediately indexed into Elasticsearch.
+8. **Search & Generate:** A user asks a question via the Copilot `/api/chat`. The system executes a Hybrid Search to retrieve context blocks, and the local LLM generates a grounded response with strict source citations.
