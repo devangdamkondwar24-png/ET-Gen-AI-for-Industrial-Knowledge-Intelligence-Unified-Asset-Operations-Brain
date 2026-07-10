@@ -1,44 +1,79 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Topbar from '../components/Topbar';
+import { NavLink } from 'react-router-dom';
 import { sendChatMessage, uploadDocument, type ChatMessage, type Citation } from '../api/agents';
 
-const CitationChip: React.FC<{ citation: Citation }> = ({ citation }) => (
-  <span
-    className="inline-flex items-center gap-1 px-2 py-0.5 border border-primary/50 text-primary bg-primary-container/40 rounded-full text-[11px] font-mono cursor-pointer hover:bg-primary-container transition-colors"
-    title={citation.text_preview}
-  >
-    <span className="material-symbols-outlined text-[11px]">article</span>
-    {citation.doc_id} p.{citation.page}
-  </span>
+// ── Shared Sidebar (matches Stitch design exactly) ────────────────────────────
+const Sidebar: React.FC<{ activePage?: string }> = () => (
+  <aside className="fixed left-0 top-0 h-full w-[240px] bg-[#F5F5F5] border-r border-[#E0E0E0] flex flex-col py-[24px] z-50" style={{fontFamily:"Inter,sans-serif"}}>
+    <div className="px-[16px] mb-8">
+      <h1 className="font-bold text-[18px] leading-[1.4] text-[#212121]">The Cockpit</h1>
+      <p className="text-[#424242] text-xs opacity-70">Reliability Engineer</p>
+    </div>
+    <nav className="flex-1 flex flex-col gap-1">
+      <NavLink end to="/" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
+        <span className="material-symbols-outlined">smart_toy</span>
+        <span className="text-[14px]">Copilot</span>
+      </NavLink>
+      <NavLink to="/rca" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
+        <span className="material-symbols-outlined">dashboard_customize</span>
+        <span className="text-[14px]">RCA Dashboard</span>
+      </NavLink>
+      <NavLink to="/compliance" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
+        <span className="material-symbols-outlined">verified_user</span>
+        <span className="text-[14px]">Compliance</span>
+      </NavLink>
+      <NavLink to="/lessons" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
+        <span className="material-symbols-outlined">school</span>
+        <span className="text-[14px]">Lessons Learned</span>
+      </NavLink>
+    </nav>
+    <div className="mt-auto px-[16px] pt-6 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full border border-[#E0E0E0] bg-[#E0F2F1] flex items-center justify-center overflow-hidden">
+        <span className="material-symbols-outlined text-[#004D40] text-xl">person</span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-[13px] font-[JetBrains_Mono,monospace] text-[#212121]">ENG_0422</span>
+        <span className="text-[10px] text-[#424242] uppercase tracking-widest">Active Session</span>
+      </div>
+    </div>
+  </aside>
 );
 
+// ── Citation chip ─────────────────────────────────────────────────────────────
+const CitationPill: React.FC<{ citation: Citation }> = ({ citation }) => (
+  <button className="flex items-center gap-2 px-3 py-1.5 border border-[#004D40] rounded-full bg-[#004D40]/5 hover:bg-[#004D40]/10 transition-colors group">
+    <span className="material-symbols-outlined text-[14px] text-[#004D40]">description</span>
+    <span className="text-[12px] text-[#004D40] font-bold" style={{fontFamily:'Inter,sans-serif'}}>
+      [{citation.doc_id} p.{citation.page}]
+    </span>
+    <span className="material-symbols-outlined text-[14px] text-[#004D40] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
+  </button>
+);
+
+// ── Chat message bubble ───────────────────────────────────────────────────────
 const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
   if (message.role === 'user') {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[70%] bg-surface px-4 py-3 rounded-2xl rounded-tr-sm border border-border-muted">
-          <p className="text-sm text-on-surface">{message.content}</p>
+      <div className="flex flex-col items-end gap-2 max-w-[80%] self-end">
+        <div className="bg-[#F5F5F5] text-[#212121] px-5 py-4 rounded-xl rounded-tr-none border border-[#E0E0E0]">
+          <p className="text-[14px] leading-[1.5]">{message.content}</p>
         </div>
       </div>
     );
   }
-
   return (
-    <div className="flex gap-3">
-      <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center flex-shrink-0 mt-1">
-        <span className="material-symbols-outlined text-primary text-sm">smart_toy</span>
-      </div>
-      <div className="max-w-[75%] space-y-2">
-        <div className="bg-white border-l-4 border-primary px-4 py-3 rounded-r-2xl border border-border-muted">
-          <p className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap">{message.content}</p>
+    <div className="flex flex-col items-start gap-3 max-w-[85%] self-start">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-6 h-6 bg-[#004D40] rounded flex items-center justify-center">
+          <span className="material-symbols-outlined text-white text-sm" style={{fontVariationSettings:"'FILL' 1"}}>smart_toy</span>
         </div>
+        <span className="text-xs text-[#004D40] font-bold" style={{fontFamily:'JetBrains Mono, monospace'}}>Industrial Copilot</span>
+      </div>
+      <div className="bg-white text-[#212121] px-6 py-5 border-l-4 border-[#004D40] border border-[#E0E0E0] shadow-sm relative overflow-hidden rounded-r-lg">
+        <p className="text-[16px] leading-[1.6] whitespace-pre-wrap">{message.content}</p>
         {message.citations && message.citations.length > 0 && (
-          <div className="flex flex-wrap gap-1 pl-1">
-            <span className="text-[11px] text-text-muted mr-1">Sources:</span>
-            {message.citations.map((c, i) => (
-              <CitationChip key={i} citation={c} />
-            ))}
+          <div className="pt-3 flex flex-wrap gap-2 mt-2">
+            {message.citations.map((c, i) => <CitationPill key={i} citation={c} />)}
           </div>
         )}
       </div>
@@ -46,146 +81,133 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
   );
 };
 
+// ── Copilot Page ─────────────────────────────────────────────────────────────
 const CopilotPage: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: 'assistant',
-      content: 'Hello! I\'m the Industrial Knowledge Copilot. Ask me anything about your assets, maintenance procedures, or operational data. I will ground my answers in your indexed documents.',
-      citations: [],
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([{
+    role: 'assistant',
+    content: "Hello! I'm the Industrial Knowledge Copilot. Ask me anything about your assets, maintenance procedures, or operational data. I will ground my answers in your indexed documents.",
+    citations: [],
+  }]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const handleSend = async () => {
-    const query = input.trim();
-    if (!query || isLoading) return;
-
-    const userMessage: ChatMessage = { role: 'user', content: query };
-    setMessages(prev => [...prev, userMessage]);
+    const q = input.trim();
+    if (!q || isLoading) return;
+    setMessages(p => [...p, { role: 'user', content: q }]);
     setInput('');
     setIsLoading(true);
-
     try {
-      const res = await sendChatMessage(query);
-      const aiMessage: ChatMessage = {
-        role: 'assistant',
-        content: res.answer,
-        citations: res.citations,
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `Error: Could not reach the backend. Please ensure the API is running.\n\n${errorMessage}`,
-        citations: [],
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+      const res = await sendChatMessage(q);
+      setMessages(p => [...p, { role: 'assistant', content: res.answer, citations: res.citations }]);
+    } catch (e: unknown) {
+      setMessages(p => [...p, { role: 'assistant', content: `⚠ Backend unavailable: ${e instanceof Error ? e.message : 'Unknown error'}`, citations: [] }]);
+    } finally { setIsLoading(false); }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadStatus(`Uploading ${file.name}...`);
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploadStatus(`Uploading ${file.name}…`);
     try {
-      const res = await uploadDocument(file);
-      setUploadStatus(`✓ Uploaded successfully. Job ID: ${res.job_id}`);
-    } catch {
-      setUploadStatus('✗ Upload failed. Ensure the API is running.');
-    }
+      const r = await uploadDocument(file);
+      setUploadStatus(`✓ Uploaded. Job ID: ${r.job_id}`);
+    } catch { setUploadStatus('✗ Upload failed. Ensure the API is running.'); }
     setTimeout(() => setUploadStatus(null), 5000);
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen overflow-hidden bg-white" style={{fontFamily:'Inter,sans-serif'}}>
       <Sidebar />
-      <div className="flex-1 ml-60 flex flex-col">
-        <Topbar title="Industrial Copilot" />
-        <main className="flex-1 pt-12 flex flex-col overflow-hidden">
-          {/* Upload Status Banner */}
-          {uploadStatus && (
-            <div className="mx-6 mt-4 px-4 py-2 bg-primary-container border border-primary/30 rounded-lg text-sm text-primary">
-              {uploadStatus}
+      {/* Main content */}
+      <main className="fixed top-0 right-0 w-[calc(100%-240px)] h-full flex flex-col bg-white">
+        {/* Topbar */}
+        <header className="h-14 w-full bg-white border-b border-[#E0E0E0] flex items-center justify-between px-[16px] z-40 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#004D40]">settings_input_component</span>
+              <span className="text-[#004D40] font-bold text-[13px]" style={{fontFamily:'JetBrains Mono,monospace'}}>Industrial Copilot</span>
             </div>
-          )}
+            {uploadStatus && (
+              <div className="flex items-center gap-1.5 bg-[#004D40]/10 px-2 py-0.5 rounded border border-[#004D40]/20">
+                <span className="text-[11px] text-[#004D40] font-bold" style={{fontFamily:'JetBrains Mono,monospace'}}>{uploadStatus}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <input className="bg-[#F5F5F5] border border-[#E0E0E0] rounded-full px-4 py-1.5 text-xs w-64 focus:outline-none focus:border-[#004D40] transition-all text-[#212121]" placeholder="Search asset telemetry..." type="text"/>
+              <span className="material-symbols-outlined absolute right-3 top-1.5 text-[#424242] text-sm">search</span>
+            </div>
+            <div className="flex items-center gap-4 text-[#424242]">
+              <button className="material-symbols-outlined hover:text-[#004D40] transition-colors">notifications</button>
+              <button className="material-symbols-outlined hover:text-[#004D40] transition-colors">settings</button>
+            </div>
+          </div>
+        </header>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-            {messages.map((message, i) => (
-              <MessageBubble key={i} message={message} />
-            ))}
+        {/* Chat area */}
+        <section className="flex-1 flex flex-col overflow-hidden relative">
+          <div className="flex-1 overflow-y-auto p-[24px] flex flex-col gap-8" style={{scrollbarWidth:'thin', scrollbarColor:'#E0E0E0 transparent'}}>
+            <div className="flex justify-center">
+              <span className="text-[10px] text-[#424242]/60 uppercase tracking-[0.2em]" style={{fontFamily:'JetBrains Mono,monospace'}}>
+                Operational Stream Log // {new Date().toLocaleDateString()}
+              </span>
+            </div>
+            {messages.map((m, i) => <MessageBubble key={i} message={m} />)}
             {isLoading && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-sm animate-spin">sync</span>
+              <div className="flex flex-col items-start gap-3 max-w-[85%] self-start">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 bg-[#004D40] rounded flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white text-sm animate-spin">sync</span>
+                  </div>
+                  <span className="text-xs text-[#004D40] font-bold" style={{fontFamily:'JetBrains Mono,monospace'}}>Industrial Copilot</span>
                 </div>
-                <div className="bg-white border-l-4 border-primary px-4 py-3 rounded-r-2xl border border-border-muted">
-                  <p className="text-sm text-text-muted">Searching knowledge base...</p>
+                <div className="bg-white px-6 py-4 border-l-4 border-[#004D40] border border-[#E0E0E0] shadow-sm rounded-r-lg">
+                  <p className="text-[14px] text-[#757575]">Searching knowledge base…</p>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Bar */}
-          <div className="px-6 pb-6">
-            <div className="bg-surface border border-border-muted rounded-2xl p-3 flex items-end gap-3">
-              <button
-                id="btn-upload-doc"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 rounded-xl hover:bg-primary-container text-text-muted hover:text-primary transition-colors flex-shrink-0"
-                title="Upload Document"
-              >
-                <span className="material-symbols-outlined">attach_file</span>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileUpload}
-                className="hidden"
-                accept=".pdf,.xlsx,.csv,.msg,.eml,.txt,.docx"
-              />
+          {/* Input */}
+          <div className="p-[16px] bg-white/80 backdrop-blur-xl border-t border-[#E0E0E0] z-20">
+            <div className="max-w-4xl mx-auto relative">
               <textarea
                 id="chat-input"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about pump P-101, SOP compliance, or failure analysis..."
-                className="flex-1 bg-transparent text-sm text-on-surface placeholder:text-text-muted resize-none outline-none max-h-32 leading-relaxed"
-                rows={1}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                placeholder="Query asset database or request RCA analysis..."
+                className="w-full bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg p-4 pb-12 text-[#212121] focus:outline-none focus:border-[#004D40] transition-all resize-none h-24 shadow-sm text-[14px]"
               />
-              <button
-                id="btn-send-chat"
-                onClick={handleSend}
-                disabled={isLoading || !input.trim()}
-                className="p-2 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-              >
-                <span className="material-symbols-outlined">send</span>
-              </button>
+              <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                <button id="btn-attach" onClick={() => fileInputRef.current?.click()} className="p-1.5 hover:bg-white border border-transparent hover:border-[#E0E0E0] rounded transition-colors text-[#424242]">
+                  <span className="material-symbols-outlined text-lg">attach_file</span>
+                </button>
+                <button className="p-1.5 hover:bg-white border border-transparent hover:border-[#E0E0E0] rounded transition-colors text-[#424242]">
+                  <span className="material-symbols-outlined text-lg">barcode_scanner</span>
+                </button>
+                <input ref={fileInputRef} type="file" onChange={handleFileUpload} className="hidden" accept=".pdf,.xlsx,.csv,.msg,.eml,.txt,.docx"/>
+              </div>
+              <div className="absolute bottom-3 right-3 flex items-center gap-3">
+                <span className="text-[10px] text-[#424242] uppercase hidden md:block" style={{fontFamily:'JetBrains Mono,monospace'}}>Press Enter to Transmit</span>
+                <button id="btn-send" onClick={handleSend} disabled={isLoading || !input.trim()}
+                  className="bg-[#004D40] text-white px-4 py-1.5 rounded font-bold text-sm active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{fontFamily:'JetBrains Mono,monospace'}}>
+                  <span>SEND</span>
+                  <span className="material-symbols-outlined text-sm">send</span>
+                </button>
+              </div>
             </div>
-            <p className="text-center text-[11px] text-text-muted mt-2">
-              Answers are grounded in indexed documents. Press Enter to send, Shift+Enter for new line.
-            </p>
           </div>
-        </main>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };
