@@ -24,3 +24,14 @@ pdf2image>=1.16.3
 # Phase 2 — RAG & LLM
 sentence-transformers>=2.3.1
 httpx>=0.26.0
+
+# Phase 3 — Graph & Agents (Neo4j, LangGraph, Universal Ingestion)
+neo4j>=5.14.0
+python-magic>=0.4.27
+extract-msg>=0.39.0
+pandas>=2.0.0
+openpyxl>=3.1.2
+langgraph>=0.0.26
+langchain-core>=0.1.27
+pymupdf>=1.23.0
+ollama>=0.1.6
