@@ -1,85 +1,72 @@
-# Industrial Knowledge Intelligence Platform
+# Industrial Knowledge Intelligence Platform (Offline RAG Engine)
 
-An enterprise-grade platform designed to mitigate knowledge fragmentation in asset-intensive industries by unifying engineering drawings, maintenance work orders, safety procedures, inspection reports, and regulatory records into a single, navigable knowledge base.
+An enterprise-grade platform designed to mitigate knowledge fragmentation in asset-intensive industries by unifying engineering drawings, maintenance work orders, safety procedures, inspection reports, and regulatory records into a single, navigable knowledge base. 
+
+This repository implements a **fully offline, highly secure Retrieval-Augmented Generation (RAG) Engine** ensuring zero data leakage for strict enterprise environments.
 
 ## Architecture & Core Technologies
 
-This prototype moves beyond mock data into a fully functional backend utilizing local file storage to emulate robust operations.
+This system is built as a highly robust, containerized microservice architecture.
 
-*   **Frontend**: Next.js (App Router), Tailwind CSS v4, React Flow, Recharts, Lucide React.
-*   **Backend**: FastAPI, SQLite (FTS5 Search), Git (Audit Trails).
-*   **Knowledge Storage (OKF)**: Open Knowledge Format (v0.1) — Git-versioned Markdown with strict YAML frontmatter schemas.
-*   **AI Engine**: Agentic retrieval architecture using keyword search and deterministic link-traversal rather than opaque vector databases, paired with Claude 3.5 Sonnet (via Anthropic API) and a fallback local mock-LLM for deterministic testing.
-*   **Ingestion Pipeline**: Asynchronous background workers using `pdfplumber` and `Tesseract OCR` for document entity extraction.
+*   **API Backend**: FastAPI (Python 3.11).
+*   **Vector & Keyword Search**: Elasticsearch 8.x executing true **Hybrid Search** (BM25 + kNN using `cosineSimilarity` script scoring).
+*   **Embeddings**: `sentence-transformers` (`all-MiniLM-L6-v2`) generating 384-dimensional dense vectors strictly on CPU.
+*   **Generative AI**: Local **Ollama** container running open-weights models (e.g., `mistral`).
+*   **Document Storage**: MinIO (S3-compatible object storage) for raw files and OCR assets.
+*   **Relational Database**: PostgreSQL for job tracking and metadata.
+*   **Ingestion & Parsing**: Apache Tika (containerized) for raw text extraction, falling back to a custom asynchronous OCR Worker (`pdf2image` + `pytesseract`) for scanned/hybrid PDFs.
+
+## Phase 2 Highlights
+- **Smart Chunking**: Boundary-aware hierarchical chunking (Paragraph -> Sentence -> Character) with deterministic overlapping.
+- **Idempotent Ingestion**: Chunk IDs are deterministically generated to prevent duplication across pipeline restarts.
+- **Tuned Hybrid Retrieval**: ElasticSearch scores are mathematically balanced (`(cosine + 1.0) * 5.0` vs `BM25 * 0.5`) to prevent unbounded keyword matches from suppressing semantic intent.
+- **Anti-Hallucination Guardrails**: The `/api/chat` Copilot enforces a strict confidence threshold (minimum hybrid score of `7.5`). It requires the LLM to output formal `<CITATIONS>`, and intercepts the response if the LLM hallucinates unverified source IDs.
 
 ## Prerequisites
 
-*   Node.js (v18 or higher)
-*   Python (3.9 or higher)
-*   Tesseract OCR (Installed and added to system PATH)
-*   Poppler (Required by `pdf2image`, added to system PATH)
+*   Docker and Docker Compose
+*   *Note: Python, Tesseract, and external dependencies are fully containerized.*
 
 ## Setup & Running
 
-You need to run both the frontend and backend servers simultaneously.
+The entire backend infrastructure is orchestrated via Docker Compose.
 
-### 1. Environment Variables
-Create a `.env` file in the `backend/` directory:
-```env
-ANTHROPIC_API_KEY=your_api_key_here
-USE_MOCK_LLM=true  # Set to 'false' to use real Anthropic LLM
-```
+### 1. Start the Stack
 
-### 2. Start the Backend (FastAPI)
-
-Open a terminal and navigate to the `backend` directory:
+Open a terminal at the root of the project (or in the `backend/` directory) and run:
 ```bash
-cd backend
+docker-compose up -d --build
 ```
+This will spin up:
+- `etgen_postgres` (Port 5432)
+- `etgen_minio` (Ports 9000, 9001)
+- `etgen_elasticsearch` (Port 9200)
+- `etgen_tika` (Port 9998)
+- `etgen_ollama` (Port 11434)
+- `etgen_ocr_worker` (Background Python worker)
 
-Create and activate a virtual environment:
+### 2. Pull the Local LLM Model
+Since Ollama starts empty by default, you must pull a model to enable the chat API. In a new terminal, execute:
 ```bash
-python -m venv .venv
-# Windows:
-.\.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
+docker exec -d etgen_ollama ollama pull mistral
 ```
+*(Note: Downloading `mistral` will take several minutes depending on your internet connection.)*
 
-Install dependencies:
+### 3. Usage & Testing
+
+You can interact with the system using standard REST calls to the FastAPI backend (running inside the `ocr_worker` container or port-forwarded depending on your config), or by using the built-in evaluation scripts.
+
+**Run the Benchmark Suite:**
+To test the retrieval performance and accuracy of the Hybrid Search against exact keyword, semantic, and out-of-domain queries:
 ```bash
-pip install -r requirements.txt
+docker exec etgen_ocr_worker python scripts/evaluate_retrieval.py
 ```
 
-Start the server:
-```bash
-uvicorn main:app --reload
-```
-The backend API will run on `http://localhost:8000`.
+## System Workflow
 
-### 3. Start the Frontend (Next.js)
-
-Open a second terminal and navigate to the `frontend` directory:
-```bash
-cd frontend
-```
-
-Install dependencies:
-```bash
-npm install
-```
-
-Start the development server:
-```bash
-npm run dev
-```
-The frontend application will be available at `http://localhost:3000`.
-
-## Modules & Features
-
-1.  **Dashboard**: High-level overview of active tracking metrics.
-2.  **Knowledge Browser**: A fully interactive file tree visualizing the OKF markdown files, including rendered markdown, incoming/outgoing link references, and git-backed audit trails.
-3.  **Ingestion Pipeline**: Upload documents to kick off an asynchronous extraction job. Extracts entities and dependencies into the Git-versioned OKF format, generating a visual React Flow graph.
-4.  **Expert Copilot**: An agentic RAG chat interface relying on explicit keyword-based retrieval and link-hopping to provide answers with source citations and confidence scores.
-5.  **Maintenance Intelligence**: Aggregates time-series sensor telemetry, work order histories, and incident reports into a unified timeline, executing AI-generated Root Cause Analysis (RCA).
-6.  **Compliance Analyzer**: Highlights gaps between standard operating procedures (SOPs) and safety regulations.
+1. **Ingest:** A document is uploaded via API and sent to MinIO. Postgres tracks the job state (`pending`).
+2. **Parse:** The file is sent to Tika. If Tika fails (e.g., scanned PDF), the async OCR worker kicks in, converting pages to images and running Pytesseract.
+3. **Normalize & Chunk:** Text is cleaned, normalized, and split into boundary-aware chunks.
+4. **Embed:** `sentence-transformers` generates a 384-dimensional dense vector for each chunk.
+5. **Index:** Chunks + Vectors + Provenance (Page #, Asset Tag) are inserted into Elasticsearch.
+6. **Search & Generate:** A user asks a question via `/api/chat`. The system executes a Hybrid Search to find the top 5 chunks. The LLM generates a grounded response with strict source citations.
