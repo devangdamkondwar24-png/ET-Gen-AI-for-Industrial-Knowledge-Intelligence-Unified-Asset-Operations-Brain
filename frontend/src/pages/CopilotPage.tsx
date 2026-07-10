@@ -1,43 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
 import { sendChatMessage, uploadDocument, type ChatMessage, type Citation } from '../api/agents';
-
-// ── Shared Sidebar (matches Stitch design exactly) ────────────────────────────
-const Sidebar: React.FC<{ activePage?: string }> = () => (
-  <aside className="fixed left-0 top-0 h-full w-[240px] bg-[#F5F5F5] border-r border-[#E0E0E0] flex flex-col py-[24px] z-50" style={{fontFamily:"Inter,sans-serif"}}>
-    <div className="px-[16px] mb-8">
-      <h1 className="font-bold text-[18px] leading-[1.4] text-[#212121]">The Cockpit</h1>
-      <p className="text-[#424242] text-xs opacity-70">Reliability Engineer</p>
-    </div>
-    <nav className="flex-1 flex flex-col gap-1">
-      <NavLink end to="/" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
-        <span className="material-symbols-outlined">smart_toy</span>
-        <span className="text-[14px]">Copilot</span>
-      </NavLink>
-      <NavLink to="/rca" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
-        <span className="material-symbols-outlined">dashboard_customize</span>
-        <span className="text-[14px]">RCA Dashboard</span>
-      </NavLink>
-      <NavLink to="/compliance" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
-        <span className="material-symbols-outlined">verified_user</span>
-        <span className="text-[14px]">Compliance</span>
-      </NavLink>
-      <NavLink to="/lessons" className={({isActive})=>`flex items-center gap-3 py-3 px-[16px] transition-colors ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#424242] font-medium hover:bg-white/50'}`}>
-        <span className="material-symbols-outlined">school</span>
-        <span className="text-[14px]">Lessons Learned</span>
-      </NavLink>
-    </nav>
-    <div className="mt-auto px-[16px] pt-6 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full border border-[#E0E0E0] bg-[#E0F2F1] flex items-center justify-center overflow-hidden">
-        <span className="material-symbols-outlined text-[#004D40] text-xl">person</span>
-      </div>
-      <div className="flex flex-col">
-        <span className="text-[13px] font-[JetBrains_Mono,monospace] text-[#212121]">ENG_0422</span>
-        <span className="text-[10px] text-[#424242] uppercase tracking-widest">Active Session</span>
-      </div>
-    </div>
-  </aside>
-);
 
 // ── Citation chip ─────────────────────────────────────────────────────────────
 const CitationPill: React.FC<{ citation: Citation }> = ({ citation }) => (

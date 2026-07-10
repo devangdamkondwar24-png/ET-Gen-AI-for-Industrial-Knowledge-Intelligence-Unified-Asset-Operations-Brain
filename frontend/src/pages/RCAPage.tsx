@@ -1,45 +1,6 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
 import { runRcaAnalysis, type RCAResponse, type RCAHypothesis } from '../api/agents';
-
-// ── Shared Sidebar ─────────────────────────────────────────────────────────────
-const Sidebar: React.FC = () => (
-  <aside className="fixed left-0 top-0 h-full w-[240px] bg-[#F5F5F5] border-r border-[#E0E0E0] flex flex-col py-[4px] z-20" style={{fontFamily:'Inter,sans-serif'}}>
-    <div className="px-[24px] py-6">
-      <h1 className="text-[18px] font-bold text-[#004D40] tracking-tight" style={{fontFamily:'Inter,sans-serif'}}>Industrial Cockpit</h1>
-      <p className="text-[#757575] text-[11px] uppercase tracking-widest mt-1">Reliability Engineer</p>
-    </div>
-    <nav className="flex-1 space-y-1 px-3">
-      {[
-        {to:'/', icon:'smart_toy', label:'Copilot'},
-        {to:'/rca', icon:'query_stats', label:'Analysis', exact:true},
-        {to:'/compliance', icon:'verified_user', label:'Compliance'},
-        {to:'/lessons', icon:'school', label:'Lessons Learned'},
-      ].map(({to, icon, label, exact}) => (
-        <NavLink key={to} end={to==='/' || exact} to={to}
-          className={({isActive})=>`flex items-center gap-3 px-4 py-3 transition-colors duration-200 ${isActive?'border-l-4 border-[#004D40] bg-[#004D40]/5 text-[#004D40] font-bold':'text-[#616161] hover:bg-[#EEEEEE]'}`}>
-          <span className="material-symbols-outlined">{icon}</span>
-          <span className="text-[14px]">{label}</span>
-        </NavLink>
-      ))}
-    </nav>
-    <div className="mt-auto px-[24px] pb-6">
-      <button className="w-full bg-[#004D40] text-white py-3 font-bold rounded flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-sm text-sm">
-        <span className="material-symbols-outlined">add</span>
-        New Analysis
-      </button>
-      <div className="mt-6 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full border border-[#004D40]/20 bg-[#E0F2F1] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#004D40]">person</span>
-        </div>
-        <div className="overflow-hidden">
-          <p className="font-bold text-[#212121] truncate text-sm">User Profile</p>
-          <p className="text-[11px] text-[#757575] truncate">Shift A Lead</p>
-        </div>
-      </div>
-    </div>
-  </aside>
-);
 
 // ── Confidence badge colors ────────────────────────────────────────────────────
 const confBadge: Record<string, string> = {

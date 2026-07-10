@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import DashboardPage from './pages/DashboardPage';
 import CopilotPage from './pages/CopilotPage';
 import RCAPage from './pages/RCAPage';
 import CompliancePage from './pages/CompliancePage';
@@ -9,7 +10,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<CopilotPage />} />
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/copilot" element={<CopilotPage />} />
         <Route path="/rca" element={<RCAPage />} />
         <Route path="/compliance" element={<CompliancePage />} />
         <Route path="/lessons" element={<LessonsPage />} />
