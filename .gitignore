@@ -1,0 +1,34 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# Docker
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Databases / Volumes
+data/
+backend_ollama_data/
+backend_es_data/
+backend_pg_data/
+backend_minio_data/

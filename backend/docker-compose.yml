@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: etgen_postgres
+    environment:
+      POSTGRES_USER: etgen_user
+      POSTGRES_PASSWORD: etgen_password
+      POSTGRES_DB: etgen_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    container_name: etgen_minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  tika:
+    image: apache/tika:latest-full
+    container_name: etgen_tika
+    ports:
+      - "9998:9998"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: etgen_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: etgen_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  ocr_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ocr
+    container_name: etgen_ocr_worker
+    depends_on:
+      - db
+      - minio
+    environment:
+      - POSTGRES_USER=etgen_user
+      - POSTGRES_PASSWORD=etgen_password
+      - POSTGRES_DB=etgen_db
+      - DATABASE_URL=postgresql://etgen_user:etgen_password@db:5432/etgen_db
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+      - S3_ENDPOINT=http://minio:9000
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - TIKA_SERVER_URL=http://tika:9998
+      - OLLAMA_URL=http://ollama:11434
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
+  minio_data:
+  elastic_data:
+  ollama_data:

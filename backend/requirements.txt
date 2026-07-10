@@ -1,10 +1,26 @@
-fastapi>=0.111.0
-uvicorn>=0.30.1
-pydantic>=2.7.4
-anthropic>=0.30.0
-pdfplumber>=0.11.2
+# Phase 1.1 — Enterprise Ingestion Pipeline
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+python-dotenv>=1.0.0
+python-multipart>=0.0.6
+
+# Database (State Machine & Metadata)
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# S3/MinIO Storage
+boto3>=1.28.0
+
+# HTTP (for Tika Server calls)
+requests>=2.31.0
+
+# Phase 1.2 — OCR & Indexing
+elasticsearch>=8.11.0,<9.0.0
 pytesseract>=0.3.10
-pdf2image>=1.17.0
-pyyaml>=6.0.1
-python-multipart>=0.0.9
-GitPython>=3.1.43
+pdf2image>=1.16.3
+
+# Phase 2 — RAG & LLM
+sentence-transformers>=2.3.1
+httpx>=0.26.0

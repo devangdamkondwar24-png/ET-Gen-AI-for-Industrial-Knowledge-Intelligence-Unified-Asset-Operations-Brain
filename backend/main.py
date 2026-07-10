@@ -1,31 +1,29 @@
+from dotenv import load_dotenv
+import os as _os
+load_dotenv(_os.path.join(_os.path.dirname(__file__), ".env"))  # Always load from backend dir
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.ingestion import router as ingestion_router
-from api.copilot import router as copilot_router
-from api.maintenance import router as maintenance_router
-from api.compliance import router as compliance_router
-from api.knowledge import router as knowledge_router
-from api.lessons import router as lessons_router
+from api.search import router as search_router
+from api.chat import router as chat_router
 
 app = FastAPI(title="Industrial Knowledge Intelligence API")
 
 # Setup CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # For prototyping
+    allow_origins=["*"],  # For prototyping
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(ingestion_router, prefix="/api/ingestion", tags=["ingestion"])
-app.include_router(copilot_router, prefix="/api/copilot", tags=["copilot"])
-app.include_router(maintenance_router, prefix="/api/maintenance", tags=["maintenance"])
-app.include_router(compliance_router, prefix="/api/compliance", tags=["compliance"])
-app.include_router(knowledge_router, prefix="/api/knowledge", tags=["knowledge"])
-app.include_router(lessons_router, prefix="/api/lessons", tags=["lessons"])
+app.include_router(search_router, prefix="/api", tags=["search"])
+app.include_router(chat_router, prefix="/api", tags=["chat"])
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Industrial Knowledge Intelligence API"}
+    return {"message": "Industrial Knowledge Intelligence API — Phase 2.0"}
