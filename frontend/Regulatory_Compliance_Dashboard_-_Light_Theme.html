@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ISO 55001 Compliance Cockpit - Light Edition</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#004D40",
+                        "on-primary": "#FFFFFF",
+                        "surface": "#FFFFFF",
+                        "background": "#FFFFFF",
+                        "surface-container-low": "#F5F5F5",
+                        "surface-container": "#FFFFFF",
+                        "surface-container-high": "#FAFAFA",
+                        "border-muted": "#E0E0E0",
+                        "on-surface": "#212121",
+                        "on-surface-variant": "#616161",
+                        "text-muted": "#757575",
+                        "alert-critical": "#D32F2F",
+                        "alert-warning": "#ED6C02",
+                        "alert-success": "#2E7D32",
+                        "status-gap": "#FFEBEE",
+                        "status-missing": "#FFF3E0",
+                        "status-compliant": "#E8F5E9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-page": "24px",
+                        "gutter": "16px",
+                        "card-padding": "20px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "label-mono": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "citation": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "roboto-mono": ["Roboto Mono"]
+                    },
+                    "fontSize": {
+                        "label-mono": ["13px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "citation": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-sm": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #FFFFFF;
+            color: #212121;
+        }
+        .industrial-grid {
+            background-image: linear-gradient(#E0E0E0 1px, transparent 1px), linear-gradient(90deg, #E0E0E0 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.1;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden h-screen flex">
+<!-- Global Background Elements -->
+<div class="fixed inset-0 industrial-grid pointer-events-none"></div>
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 h-full w-[240px] bg-surface-container-low border-r border-border-muted flex flex-col py-6 z-30">
+<div class="px-6 mb-10">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">The Cockpit</h1>
+<p class="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest mt-1">Reliability Engineer</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Nav Item: Copilot -->
+<a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white transition-colors duration-200 group active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mr-3">smart_toy</span>
+<span class="font-label-mono text-label-mono">Copilot</span>
+</a>
+<!-- Nav Item: RCA Dashboard -->
+<a class="flex items-center px-6 py-3 text-on-surface-variant hover:bg-white transition-colors duration-200 group active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="font-label-mono text-label-mono">RCA Dashboard</span>
+</a>
+<!-- Nav Item: Compliance (ACTIVE) -->
+<a class="flex items-center px-6 py-3 border-l-4 border-primary bg-primary/5 text-primary font-bold group active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mr-3">fact_check</span>
+<span class="font-label-mono text-label-mono">Compliance</span>
+</a>
+</nav>
+<div class="mt-auto px-6 pt-6 border-t border-border-muted space-y-1">
+<a class="flex items-center py-3 text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-mono text-label-mono">Settings</span>
+</a>
+<a class="flex items-center py-3 text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">help</span>
+<span class="font-label-mono text-label-mono">Support</span>
+</a>
+<div class="mt-6 flex items-center space-x-3">
+<div class="w-10 h-10 bg-white rounded border border-border-muted flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a senior industrial reliability engineer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3qB_sIz4i9zfq9FSHuBamDjZdq21YyH4zPhzt2wfxK5XCv5nLe_d9qkUTttRvhAFFjcY_s47F-YLxAhJEL73Vtzx0lG8mZrYI_Vl0AX1OPj_ZbUD9dAtsFN7Sk9hgY8zj7twcwGkWSHpjunum2elRB_O_NBMROTBAOeZR4d8DvvMutIHDfAb1rv83oM9Jvf1YMXe3T24WWh4xK9AAor3f4L6dOpvBd6uGOw_YKXdr_sscI-0fePonIJxy1xBQk3vhYpPmkXb9mX4"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-on-surface truncate">OPERATOR_042</p>
+<p class="text-[10px] text-on-surface-variant font-label-mono">AUTH_LEVEL: OMEGA</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Container -->
+<main class="ml-[240px] flex-1 flex flex-col h-full relative">
+<!-- TopNavBar Component -->
+<header class="h-14 bg-white border-b border-border-muted flex items-center justify-between px-margin-page w-full z-20">
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface uppercase tracking-tight">Regulatory Compliance: ISO 55001</h2>
+</div>
+<div class="flex items-center space-x-6">
+<!-- Search -->
+<div class="relative flex items-center bg-surface-container-low border border-border-muted px-3 py-1.5 rounded w-64 group focus-within:ring-1 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2">search</span>
+<input class="bg-transparent border-none p-0 text-xs text-on-surface focus:ring-0 placeholder:text-on-surface-variant/50 w-full font-label-mono" placeholder="Search Regulation..." type="text"/>
+<span class="text-[10px] text-on-surface-variant/40 font-label-mono ml-2 border border-border-muted px-1 rounded">/</span>
+</div>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">settings</button>
+<div class="h-6 w-px bg-border-muted"></div>
+<div class="flex items-center space-x-2 cursor-pointer active:opacity-80">
+<span class="text-[11px] font-label-mono text-on-surface-variant">ASSET: PT-0019</span>
+<span class="material-symbols-outlined text-xs text-primary">hub</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 overflow-y-auto p-margin-page space-y-6">
+<!-- Hero Stats / Summary Section -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Data Visualization Placeholder -->
+<div class="col-span-8 bg-white p-card-padding border border-border-muted rounded flex flex-col relative overflow-hidden h-48 shadow-sm">
+<div class="flex justify-between items-start mb-4 z-10">
+<div>
+<h3 class="font-label-mono text-label-mono text-primary uppercase">Compliance Pulse Index</h3>
+<p class="text-xs text-on-surface-variant">Last 30 Days Trend Analysis</p>
+</div>
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-[10px] font-label-mono text-on-surface-variant">REGULATORY</span>
+</div>
+<div class="flex items-center space-x-1">
+<span class="w-2 h-2 rounded-full bg-alert-warning"></span>
+<span class="text-[10px] font-label-mono text-on-surface-variant">OPERATIONAL</span>
+</div>
+</div>
+</div>
+<div class="flex-1 mt-2 relative bg-surface-container-low/30 rounded border border-dashed border-border-muted flex items-center justify-center">
+<span class="text-[10px] font-label-mono text-on-surface-variant/40 italic">Dynamic Pulse Graph Data Rendering...</span>
+</div>
+</div>
+<!-- Summary Card: Total Gaps -->
+<div class="col-span-4 bg-white border border-alert-critical p-card-padding rounded flex flex-col justify-center items-center relative overflow-hidden group shadow-sm">
+<span class="font-label-mono text-label-mono text-alert-critical uppercase tracking-[0.2em] font-bold">System State</span>
+<div class="text-[64px] font-bold text-alert-critical leading-none mt-2">03</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-extrabold uppercase mt-1">Total Gaps Detected</div>
+<div class="mt-4 px-3 py-1 bg-status-gap border border-alert-critical/20 text-[10px] font-bold text-alert-critical flex items-center uppercase tracking-widest rounded-full">
+<span class="material-symbols-outlined text-xs mr-1" style="font-variation-settings: 'FILL' 1;">warning</span>
+                        Action Required
+                    </div>
+</div>
+</div>
+<!-- Main Compliance Table Section -->
+<div class="bg-white border border-border-muted rounded overflow-hidden flex flex-col shadow-sm">
+<!-- Table Header UI -->
+<div class="bg-surface-container-high px-6 py-4 border-b border-border-muted flex justify-between items-center">
+<div class="flex items-center space-x-3">
+<div class="w-1 h-6 bg-primary"></div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Non-Conformance Registry</h3>
+</div>
+<div class="flex space-x-2">
+<button class="px-4 py-1.5 bg-white border border-border-muted rounded text-[11px] font-label-mono text-on-surface-variant hover:text-on-surface flex items-center transition-all shadow-sm">
+<span class="material-symbols-outlined text-sm mr-2">filter_alt</span> FILTER
+                        </button>
+<button class="px-4 py-1.5 bg-primary text-on-primary font-bold rounded text-[11px] font-label-mono flex items-center hover:opacity-90 active:scale-95 transition-all shadow-sm">
+<span class="material-symbols-outlined text-sm mr-2">download</span> EXPORT REPORT
+                        </button>
+</div>
+</div>
+<!-- The Data-Dense Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-muted bg-surface-container-low/50">
+<th class="px-6 py-3 font-label-mono text-[11px] text-on-surface-variant uppercase">Clause ID</th>
+<th class="px-6 py-3 font-label-mono text-[11px] text-on-surface-variant uppercase">Requirement Summary</th>
+<th class="px-6 py-3 font-label-mono text-[11px] text-on-surface-variant uppercase">Status</th>
+<th class="px-6 py-3 font-label-mono text-[11px] text-on-surface-variant uppercase text-center">Severity</th>
+<th class="px-6 py-3 font-label-mono text-[11px] text-on-surface-variant uppercase">Evidence</th>
+<th class="px-6 py-3 font-label-mono text-[11px] text-on-surface-variant uppercase">Recommended Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-muted">
+<!-- Row 1: Gap -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="font-roboto-mono text-primary text-[13px] bg-primary/10 px-2 py-0.5 rounded border border-primary/20">ISO-55001:2014 4.1</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-on-surface max-w-xs font-medium">Understanding the organization and its context for asset management.</p>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-status-gap text-alert-critical uppercase border border-alert-critical/10">
+<span class="w-1.5 h-1.5 bg-alert-critical rounded-full mr-1.5"></span> GAP
+                                    </span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-alert-critical font-label-mono text-[11px] font-extrabold px-2 py-1 border border-alert-critical/30 rounded bg-status-gap">CRITICAL</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-wrap gap-1">
+<span class="bg-surface-container-low border border-border-muted px-2 py-0.5 rounded-full text-[10px] font-label-mono flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[10px] mr-1">attach_file</span> DOC_4.1_V2
+                                        </span>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-[12px] text-on-surface-variant italic">Define internal/external stakeholders and issue registry by Q3.</p>
+</td>
+</tr>
+<!-- Row 2: Missing -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="font-roboto-mono text-primary text-[13px] bg-primary/10 px-2 py-0.5 rounded border border-primary/20">ISO-55001:2014 6.2.2</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-on-surface max-w-xs font-medium">Planning to achieve asset management objectives.</p>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-status-missing text-alert-warning uppercase border border-alert-warning/10">
+<span class="w-1.5 h-1.5 bg-alert-warning rounded-full mr-1.5"></span> MISSING
+                                    </span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-alert-warning font-label-mono text-[11px] font-bold px-2 py-1 border border-alert-warning/30 rounded bg-status-missing">HIGH</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant/40 italic text-[10px]">No document attached</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-[12px] text-on-surface-variant italic">Finalize SAMP alignment.</p>
+</td>
+</tr>
+<!-- Row 3: Compliant -->
+<tr class="hover:bg-surface-container-low transition-colors opacity-70">
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="font-roboto-mono text-on-surface-variant text-[13px] bg-surface-container-high px-2 py-0.5 rounded border border-border-muted">ISO-55001:2014 5.3</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-on-surface-variant max-w-xs font-medium">Organizational roles, responsibilities and authorities.</p>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-status-compliant text-alert-success uppercase border border-alert-success/10">
+<span class="w-1.5 h-1.5 bg-alert-success rounded-full mr-1.5"></span> COMPLIANT
+                                    </span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-on-surface-variant font-label-mono text-[11px] font-normal px-2 py-1 border border-border-muted rounded bg-surface-container-high">MEDIUM</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-wrap gap-1">
+<span class="bg-surface-container-low border border-border-muted px-2 py-0.5 rounded-full text-[10px] font-label-mono flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[10px] mr-1">description</span> HR_MATRIX_V4
+                                        </span>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-[12px] text-on-surface-variant/60">Current mapping verified 12 days ago.</p>
+</td>
+</tr>
+<!-- Row 4: Gap -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="font-roboto-mono text-primary text-[13px] bg-primary/10 px-2 py-0.5 rounded border border-primary/20">ISO-55001:2014 8.2</span>
+</td>
+<td class="px-6 py-4">
+<p class="text-on-surface max-w-xs font-medium">Management of change in technical infrastructure.</p>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-status-gap text-alert-critical uppercase border border-alert-critical/10">
+<span class="w-1.5 h-1.5 bg-alert-critical rounded-full mr-1.5"></span> GAP
+                                    </span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-alert-critical font-label-mono text-[11px] font-extrabold px-2 py-1 border border-alert-critical/30 rounded bg-status-gap">CRITICAL</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-wrap gap-1">
+<span class="bg-surface-container-low border border-border-muted px-2 py-0.5 rounded-full text-[10px] font-label-mono flex items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[10px] mr-1">attach_file</span> MOC_PROTOCOL
+                                        </span>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-[12px] text-on-surface-variant italic">Automated workflow for technical change approval not implemented.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Footer / Status Bar -->
+<div class="bg-surface-container-low px-6 py-3 border-t border-border-muted flex justify-between items-center">
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-alert-success"></span>
+<span class="text-[10px] font-label-mono text-on-surface-variant">CONFORMANCE: 84.2%</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="w-2 h-2 rounded-full bg-alert-critical"></span>
+<span class="text-[10px] font-label-mono text-on-surface-variant">UNRESOLVED GAPS: 3</span>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<span class="text-[10px] font-label-mono text-on-surface-variant">PAGE 01 OF 04</span>
+<div class="flex space-x-1">
+<button class="w-6 h-6 border border-border-muted rounded flex items-center justify-center hover:bg-white"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="w-6 h-6 border border-border-muted rounded flex items-center justify-center hover:bg-white"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Bento Grid: Secondary Metrics -->
+<div class="grid grid-cols-12 gap-gutter">
+<div class="col-span-4 bg-white p-card-padding border border-border-muted rounded shadow-sm">
+<h4 class="font-label-mono text-label-mono text-primary mb-4 uppercase font-bold">Asset Risk Correlation</h4>
+<div class="space-y-3">
+<div class="flex justify-between items-center text-xs">
+<span class="text-on-surface-variant font-label-mono">TURBINE_A1</span>
+<div class="w-32 bg-surface-container-low h-1.5 rounded overflow-hidden">
+<div class="bg-alert-critical h-full" style="width: 85%;"></div>
+</div>
+<span class="text-alert-critical font-bold">85%</span>
+</div>
+<div class="flex justify-between items-center text-xs">
+<span class="text-on-surface-variant font-label-mono">PUMP_STAT_02</span>
+<div class="w-32 bg-surface-container-low h-1.5 rounded overflow-hidden">
+<div class="bg-alert-warning h-full" style="width: 42%;"></div>
+</div>
+<span class="text-alert-warning font-bold">42%</span>
+</div>
+<div class="flex justify-between items-center text-xs">
+<span class="text-on-surface-variant font-label-mono">TRANS_G12</span>
+<div class="w-32 bg-surface-container-low h-1.5 rounded overflow-hidden">
+<div class="bg-primary h-full" style="width: 12%;"></div>
+</div>
+<span class="text-primary font-bold">12%</span>
+</div>
+</div>
+</div>
+<div class="col-span-5 bg-white p-card-padding border border-border-muted rounded relative overflow-hidden shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-label-mono text-label-mono text-primary uppercase font-bold">Compliance Intelligence Feed</h4>
+<span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">sensors</span>
+</div>
+<div class="space-y-3 relative z-10">
+<div class="border-l-4 border-primary pl-3 py-1 bg-primary/5 rounded-r">
+<p class="text-[11px] font-bold text-on-surface">COGNITIVE INSIGHT</p>
+<p class="text-[10px] text-on-surface-variant leading-relaxed">Clause 8.2 gap is correlated with recent asset migration from Plant B. Recommended priority upgrade.</p>
+</div>
+<div class="border-l-4 border-alert-warning pl-3 py-1 bg-alert-warning/5 rounded-r">
+<p class="text-[11px] font-bold text-on-surface">PREDICTIVE ALERT</p>
+<p class="text-[10px] text-on-surface-variant leading-relaxed">Annual surveillance audit projected for Oct 15. Readiness: 72%.</p>
+</div>
+</div>
+</div>
+<div class="col-span-3 bg-white p-card-padding border border-border-muted rounded flex flex-col justify-between shadow-sm">
+<h4 class="font-label-mono text-label-mono text-primary uppercase font-bold text-center">Audit Readiness</h4>
+<div class="relative w-24 h-24 mx-auto my-2">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-low" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-primary" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center flex-col">
+<span class="text-lg font-bold text-on-surface">75%</span>
+<span class="text-[8px] font-label-mono text-on-surface-variant">READY</span>
+</div>
+</div>
+<button class="w-full py-1.5 border border-primary/30 bg-primary text-[10px] font-label-mono text-on-primary uppercase font-bold hover:opacity-90 transition-colors rounded shadow-sm">
+                        Run Audit Pre-scan
+                    </button>
+</div>
+</div>
+</div>
+<!-- System Footer -->
+<footer class="h-8 bg-surface-container-low border-t border-border-muted flex items-center justify-between px-6 z-20">
+<div class="flex items-center space-x-4">
+<span class="text-[9px] font-label-mono text-on-surface-variant uppercase tracking-widest">System Status: <span class="text-primary font-bold">Nominal</span></span>
+<span class="text-[9px] font-label-mono text-on-surface-variant uppercase tracking-widest">Network: <span class="text-primary font-bold">Encrypted</span></span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="text-[9px] font-label-mono text-on-surface-variant uppercase" id="live-clock">2024-05-20 // 14:32:01 UTC</span>
+</div>
+</footer>
+</main>
+<script>
+        function updateClock() {
+            const now = new Date();
+            const year = now.getUTCFullYear();
+            const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(now.getUTCDate()).padStart(2, '0');
+            const hours = String(now.getUTCHours()).padStart(2, '0');
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('live-clock').textContent = `${year}-${month}-${day} // ${hours}:${minutes}:${seconds} UTC`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body></html>

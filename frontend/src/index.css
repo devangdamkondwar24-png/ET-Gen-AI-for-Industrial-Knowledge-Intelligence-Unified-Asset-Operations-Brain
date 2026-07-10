@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #004D40;
+  --color-primary-container: #E0F2F1;
+  --color-on-primary: #FFFFFF;
+  --color-surface: #F5F5F5;
+  --color-background-deep: #FFFFFF;
+  --color-on-surface: #212121;
+  --color-on-surface-variant: #424242;
+  --color-surface-slate: #FAFAFA;
+  --color-surface-container: #F0F0F0;
+  --color-border-muted: #E0E0E0;
+  --color-text-muted: #757575;
+  --color-secondary: #FFB300;
+  --color-on-secondary: #212121;
+  --color-alert-critical: #D32F2F;
+  --color-outline: #E0E0E0;
+}
+
+body {
+  background-color: var(--color-background-deep);
+  color: var(--color-on-surface);
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.mono-text {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.scanning-line {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  position: absolute;
+  width: 100%;
+  top: 0;
+  animation: scan 4s linear infinite;
+  opacity: 0.3;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+.glass-card {
+  background: rgba(245, 245, 245, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-muted);
+}
+
+.hyp-active {
+  border-left: 4px solid var(--color-primary);
+  background: rgba(0, 77, 64, 0.05);
+}

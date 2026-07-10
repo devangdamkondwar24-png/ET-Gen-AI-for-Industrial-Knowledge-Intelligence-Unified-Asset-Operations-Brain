@@ -87,6 +87,19 @@ services:
       - NEO4J_PASSWORD=industrialpassword
     volumes:
       - .:/app
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.frontend
+    container_name: etgen_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ocr_worker
+    restart: unless-stopped
 
 volumes:
   postgres_data:
