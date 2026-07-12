@@ -73,48 +73,54 @@ class IngestionPipeline:
             new_doc.state = DocumentState.stored
             db.commit()
             
-            # 3. Parse with Tika
+            # 3. Parse with Universal Router
             try:
-                parsed_content = self.parser.parse_document(file_bytes, filename)
+                from ingestion.universal_router import route_and_parse
+                parsed_doc = route_and_parse(file_bytes, filename, metadata)
                 
-                total_text = ""
-                for part in parsed_content:
-                    if "X-TIKA:content" in part:
-                        text = part["X-TIKA:content"].strip()
-                        if text:
-                            total_text += text + "\n"
+                total_text = parsed_doc.full_text
                 
                 new_doc.extracted_text_length = len(total_text)
-                new_doc.page_count = len(parsed_content)
+                new_doc.page_count = parsed_doc.page_count
                 
-                # We can store the parsed json somewhere, for now we save it in metadata
-                new_doc.parsed_metadata = {}
+                # Save parsed metadata provenance
+                new_doc.parsed_metadata = parsed_doc.provenance
                 
-                # Quality gate: if text is too short, it's likely a scanned PDF
-                if new_doc.extracted_text_length < 50:
+                # Quality gate: if text is too short, and it's not a text file, maybe OCR
+                # But only if it's pdf, cad, or image. Email/spreadsheet won't get OCR'd.
+                needs_ocr = False
+                if parsed_doc.error == "CAD_OCR_NEEDED":
+                    needs_ocr = True
+                elif new_doc.extracted_text_length < 50 and parsed_doc.doc_type in ["pdf", "image"]:
+                    needs_ocr = True
+                
+                if needs_ocr:
                     new_doc.state = DocumentState.ocr_pending
-                    logger.info(f"[{doc_id}] Text length too short. Routing to OCR.")
+                    logger.info(f"[{doc_id}] Text length too short or CAD needed. Routing to OCR.")
                 else:
                     # Digital text successful! Index it.
+                    if parsed_doc.error and not total_text:
+                        raise Exception(parsed_doc.error)
+                        
                     logger.info(f"[{doc_id}] Text extracted successfully. Indexing...")
                     chunk_index = 0
-                    for i, part in enumerate(parsed_content):
-                        if "X-TIKA:content" in part:
-                            text = part["X-TIKA:content"]
-                            chunks = chunk_text(text)
-                            for chunk in chunks:
-                                vector = document_embedder.embed_text(chunk)
-                                self.indexer.index_chunk(
-                                    doc_id=new_doc.doc_id,
-                                    plant=new_doc.plant,
-                                    asset_tag=new_doc.asset_tag,
-                                    source_system=new_doc.source_system,
-                                    page_number=i+1,
-                                    chunk_index=chunk_index,
-                                    content=chunk,
-                                    chunk_vector=vector
-                                )
-                                chunk_index += 1
+                    for page in parsed_doc.pages:
+                        text = page["text"]
+                        page_num = page["page_num"]
+                        chunks = chunk_text(text)
+                        for chunk in chunks:
+                            vector = document_embedder.embed_text(chunk)
+                            self.indexer.index_chunk(
+                                doc_id=new_doc.doc_id,
+                                plant=new_doc.plant,
+                                asset_tag=new_doc.asset_tag,
+                                source_system=new_doc.source_system,
+                                page_number=page_num,
+                                chunk_index=chunk_index,
+                                content=chunk,
+                                chunk_vector=vector
+                            )
+                            chunk_index += 1
                     
                     new_doc.state = DocumentState.indexed
                     logger.info(f"[{doc_id}] Document indexed.")

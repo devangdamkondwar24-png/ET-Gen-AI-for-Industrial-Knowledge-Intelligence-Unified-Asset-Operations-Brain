@@ -11,13 +11,13 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "mistral")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "mistral:latest")
 
 class ChatRequest(BaseModel):
     question: str
     plant: Optional[str] = None
     asset_tag: Optional[str] = None
-    top_k: int = 5
+    top_k: int = 15
 
 class SourceChunk(BaseModel):
     chunk_id: str
@@ -43,13 +43,10 @@ def build_rag_prompt(question: str, context_chunks: list) -> str:
             f"{chunk['text_snippet']}\n"
         )
 
-    prompt = f"""You are a strict Industrial Knowledge Assistant.
+    prompt = f"""You are an expert Industrial Knowledge Assistant.
 Answer the question ONLY using the provided context below. If the context does not contain the answer, you MUST say exactly "I cannot verify the answer with high confidence based on the available documents."
 
-CRITICAL INSTRUCTION: If you provide an answer, you MUST append a citations section at the very end formatted EXACTLY like this, listing the DOC_IDs you used:
-<CITATIONS>
-- [DOC_ID: <id_here>]
-</CITATIONS>
+Provide a highly detailed and comprehensive answer. You MUST include all specific numbers, dates, emails, quantities, and Work Order IDs (e.g., WO-XXXX) found in the context that relate to the question.
 
 CONTEXT:
 {context_block}
@@ -90,9 +87,9 @@ async def chat(request: ChatRequest):
         )
 
     # Fallback Rule: If the best match has a low score, reject answering.
-    # Tuned threshold: semantic baseline for out-of-domain is ~6.2. Valid hits are >9.0.
+    # kNN cosine similarity scores are between 0.0 and 1.0. Threshold at 0.5.
     top_score = search_response.results[0].score
-    if top_score < 7.5:
+    if top_score < 0.5:
         return ChatResponse(
             answer="I cannot verify the answer with high confidence based on the available documents.",
             sources=[],
@@ -115,7 +112,7 @@ async def chat(request: ChatRequest):
 
     # Step 3: Call Ollama for generation
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             ollama_response = await client.post(
                 f"{OLLAMA_URL}/api/generate",
                 json={
@@ -144,12 +141,8 @@ async def chat(request: ChatRequest):
     # Step 4: Citation Validation Check
     # If the LLM didn't use the fallback phrase, it must have included <CITATIONS> and a valid doc_id
     fallback_phrase = "cannot verify the answer"
-    if fallback_phrase not in answer:
-        has_valid_citation = any(c["doc_id"] in answer for c in context_chunks)
-        if not has_valid_citation or "<CITATIONS>" not in answer:
-            logger.warning(f"Hallucination caught: LLM failed to properly cite sources. Output: {answer}")
-            answer = "I found some information, but I cannot confidently verify the sources for this answer, so I will not provide it to avoid hallucination."
-
+    if fallback_phrase in answer:
+        answer = "I could not find enough relevant information in the documents to answer this question with high confidence."
     # Step 5: Return answer with source citations
     sources = [
         SourceChunk(

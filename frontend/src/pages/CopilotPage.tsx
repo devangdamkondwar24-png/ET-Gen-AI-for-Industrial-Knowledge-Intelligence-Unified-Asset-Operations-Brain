@@ -56,6 +56,7 @@ const CopilotPage: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -74,13 +75,27 @@ const CopilotPage: React.FC = () => {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    setUploadStatus(`Uploading ${file.name}…`);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setUploadStatus(`Uploading ${files.length} file(s)…`);
+    let successCount = 0;
     try {
-      const r = await uploadDocument(file);
-      setUploadStatus(`✓ Uploaded. Job ID: ${r.job_id}`);
-    } catch { setUploadStatus('✗ Upload failed. Ensure the API is running.'); }
+      for (let i = 0; i < files.length; i++) {
+        // Skip hidden files or unsupported extensions if needed, but for now just upload all
+        await uploadDocument(files[i]);
+        successCount++;
+        setUploadStatus(`Uploaded ${successCount}/${files.length}…`);
+      }
+      setUploadStatus(`✓ Uploaded ${successCount} file(s) successfully.`);
+    } catch { 
+      setUploadStatus('✗ Upload failed. Ensure the API is running.'); 
+    }
+    
     setTimeout(() => setUploadStatus(null), 5000);
+    // Reset inputs
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (folderInputRef.current) folderInputRef.current.value = '';
   };
 
   return (
@@ -150,13 +165,15 @@ const CopilotPage: React.FC = () => {
                 className="w-full bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg p-4 pb-12 text-[#212121] focus:outline-none focus:border-[#004D40] transition-all resize-none h-24 shadow-sm text-[14px]"
               />
               <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                <button id="btn-attach" onClick={() => fileInputRef.current?.click()} className="p-1.5 hover:bg-white border border-transparent hover:border-[#E0E0E0] rounded transition-colors text-[#424242]">
+                <button id="btn-attach" onClick={() => fileInputRef.current?.click()} className="p-1.5 hover:bg-white border border-transparent hover:border-[#E0E0E0] rounded transition-colors text-[#424242]" title="Upload File(s)">
                   <span className="material-symbols-outlined text-lg">attach_file</span>
                 </button>
-                <button className="p-1.5 hover:bg-white border border-transparent hover:border-[#E0E0E0] rounded transition-colors text-[#424242]">
-                  <span className="material-symbols-outlined text-lg">barcode_scanner</span>
+                <button onClick={() => folderInputRef.current?.click()} className="p-1.5 hover:bg-white border border-transparent hover:border-[#E0E0E0] rounded transition-colors text-[#424242]" title="Upload Folder">
+                  <span className="material-symbols-outlined text-lg">folder_open</span>
                 </button>
-                <input ref={fileInputRef} type="file" onChange={handleFileUpload} className="hidden" accept=".pdf,.xlsx,.csv,.msg,.eml,.txt,.docx"/>
+                <input ref={fileInputRef} type="file" multiple onChange={handleFileUpload} className="hidden" accept=".pdf,.xlsx,.csv,.msg,.eml,.txt,.docx"/>
+                {/* @ts-ignore - webkitdirectory is standard in browsers but sometimes lacks React TS definitions */}
+                <input ref={folderInputRef} type="file" multiple webkitdirectory="" directory="" onChange={handleFileUpload} className="hidden" />
               </div>
               <div className="absolute bottom-3 right-3 flex items-center gap-3">
                 <span className="text-[10px] text-[#424242] uppercase hidden md:block" style={{fontFamily:'JetBrains Mono,monospace'}}>Press Enter to Transmit</span>

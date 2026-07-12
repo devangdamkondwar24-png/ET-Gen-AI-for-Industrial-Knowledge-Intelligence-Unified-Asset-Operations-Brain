@@ -61,11 +61,9 @@ except Exception as e:
 print('\n[4] main.py: FastAPI route verification')
 try:
     from main import app
-    from fastapi.routing import APIRoute
-    routes = []
-    for r in app.routes:
-        if isinstance(r, APIRoute):
-            routes.append(r.path)
+    
+    # Use OpenAPI schema to get all resolved flattened routes
+    routes = list(app.openapi()["paths"].keys())
             
     print(f"  ACTUAL ROUTES FOUND: {routes}")
     

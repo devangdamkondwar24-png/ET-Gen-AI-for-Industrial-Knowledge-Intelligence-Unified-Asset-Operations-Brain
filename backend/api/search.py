@@ -53,27 +53,22 @@ async def search_documents(request: SearchRequest):
         query_vector = document_embedder.embed_text(request.query)
 
         if query_vector:
-            # --- Hybrid Search: BM25 + kNN with RRF ---
+            # --- Hybrid Search: BM25 + kNN (ES 8.x style) ---
             body = {
                 "size": request.top_k,
+                "knn": {
+                    "field": "chunk_vector",
+                    "query_vector": query_vector,
+                    "k": request.top_k,
+                    "num_candidates": request.top_k * 10,
+                    **({"filter": filter_clauses} if filter_clauses else {})
+                },
                 "query": {
                     "bool": {
                         "should": [
-                            # BM25 keyword leg (scaled down to prevent dominance)
-                            {"match": {"content": {"query": request.query, "boost": 0.5}}},
-                            # kNN semantic leg via script_score (scaled up to match BM25 unbounded scores)
-                            {
-                                "script_score": {
-                                    "query": {"match_all": {}},
-                                    "script": {
-                                        "source": "(cosineSimilarity(params.query_vector, 'chunk_vector') + 1.0) * 5.0",
-                                        "params": {"query_vector": query_vector}
-                                    }
-                                }
-                            }
+                            {"match": {"content": {"query": request.query, "boost": 0.5}}}
                         ],
-                        "filter": filter_clauses,
-                        "minimum_should_match": 1
+                        **({"filter": filter_clauses} if filter_clauses else {})
                     }
                 }
             }

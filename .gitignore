@@ -32,3 +32,8 @@ backend_ollama_data/
 backend_es_data/
 backend_pg_data/
 backend_minio_data/
+
+# Data
+dataset/
+files (5)/
+test_out.txt

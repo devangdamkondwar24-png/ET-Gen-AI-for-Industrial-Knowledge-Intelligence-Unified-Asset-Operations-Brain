@@ -21,7 +21,7 @@ export interface ChatResponse {
 }
 
 export const sendChatMessage = async (query: string): Promise<ChatResponse> => {
-  const res = await apiClient.post('/api/chat', { query });
+  const res = await apiClient.post('/api/chat', { question: query });
   return res.data;
 };
 
@@ -96,7 +96,7 @@ export const uploadDocument = async (file: File, assetTag?: string): Promise<{ j
   const formData = new FormData();
   formData.append('file', file);
   if (assetTag) formData.append('asset_tag', assetTag);
-  const res = await apiClient.post('/api/ingest', formData, {
+  const res = await apiClient.post('/api/ingestion/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return res.data;
