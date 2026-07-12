@@ -27,6 +27,13 @@ This system is built as a highly robust, containerized microservice architecture
 - **Lessons Learned Job**: A batch intelligence pipeline to detect recurring patterns and write insight nodes back into the graph.
 - **Stitch Frontend**: A complete UI including a Copilot Chat interface, RCA Dashboard, and Compliance Alerts view, all wrapped in a clean, minimalist Light Theme.
 
+## Recent Stabilizations & Tuning (Performance Fixes)
+
+- **Enhanced RAG Context Window**: Increased retrieval limit (`top_k=15`) to ensure the LLM has complete visibility across all related timelines and file formats.
+- **Deep Reasoning Timeouts**: Upgraded Nginx proxy and FastAPI internal timeouts to 300 seconds to gracefully handle slow, comprehensive generations from local 7B models.
+- **Prompt Engineering**: Highly constrained system prompts to enforce exact data extraction (numbers, emails, dates) without summarizing away critical evidence.
+- **Mistral 7B**: Pinned `OLLAMA_MODEL=mistral:latest` for superior extraction logic over smaller, lightweight models.
+
 ## Prerequisites
 
 *   Docker and Docker Compose
