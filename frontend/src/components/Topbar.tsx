@@ -7,7 +7,7 @@ interface TopbarProps {
 
 const Topbar: React.FC<TopbarProps> = ({ title, status = 'SYSTEM STABLE' }) => {
   return (
-    <header className="fixed top-0 right-0 w-[calc(100%-240px)] h-12 bg-[#1a1c1e] border-b border-border-muted flex justify-between items-center px-6 z-10">
+    <header className="fixed top-0 right-0 w-[calc(100%-240px)] h-12 bg-white border-b border-border-muted flex justify-between items-center px-6 z-10">
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-primary text-lg">search</span>
         <span className="text-sm text-on-surface-variant font-medium">{title}</span>
