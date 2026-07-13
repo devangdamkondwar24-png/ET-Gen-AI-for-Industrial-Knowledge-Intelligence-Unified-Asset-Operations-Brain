@@ -31,7 +31,6 @@ class ChatResponse(BaseModel):
     answer: str
     sources: List[SourceChunk]
     model: str
-    confidence_score: float
 
 def build_rag_prompt(question: str, context_chunks: list) -> str:
     """
@@ -84,8 +83,7 @@ async def chat(request: ChatRequest):
         return ChatResponse(
             answer="I could not find any relevant documents to answer your question.",
             sources=[],
-            model=OLLAMA_MODEL,
-            confidence_score=0.0
+            model=OLLAMA_MODEL
         )
 
     # Fallback Rule: If the best match has a low score, reject answering.
@@ -95,8 +93,7 @@ async def chat(request: ChatRequest):
         return ChatResponse(
             answer="I cannot verify the answer with high confidence based on the available documents.",
             sources=[],
-            model=OLLAMA_MODEL,
-            confidence_score=top_score
+            model=OLLAMA_MODEL
         )
 
     # Step 2: Build RAG prompt from retrieved chunks
@@ -162,6 +159,5 @@ async def chat(request: ChatRequest):
     return ChatResponse(
         answer=answer,
         sources=sources,
-        model=OLLAMA_MODEL,
-        confidence_score=top_score
+        model=OLLAMA_MODEL
     )

@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import Sidebar from '../components/Sidebar';
 import { runComplianceCheck, type ComplianceResponse } from '../api/agents';
-import { useAppContext } from '../context/AppContext';
 
+const STATUS_STYLES: Record<string, string> = {
+  COMPLIANT: 'bg-[#E8F5E9] text-[#2E7D32] border-[#2E7D32]/10',
+  GAP: 'bg-[#FFEBEE] text-[#D32F2F] border-[#D32F2F]/10',
+  MISSING: 'bg-[#FFF3E0] text-[#ED6C02] border-[#ED6C02]/10',
+};
+
+const SEVERITY_STYLES: Record<string, string> = {
+  CRITICAL: 'text-[#D32F2F] border-[#D32F2F]/30 bg-[#FFEBEE]',
+  HIGH: 'text-[#ED6C02] border-[#ED6C02]/30 bg-[#FFF3E0]',
+  MEDIUM: 'text-[#616161] border-[#E0E0E0] bg-[#FAFAFA]',
+};
+
+// ── Compliance Page ──────────────────────────────────────────────────────────
 const CompliancePage: React.FC = () => {
-  const {} = useAppContext();
   const [plant, setPlant] = useState('Plant-101');
-  const [standard, setStandard] = useState('Factory Act 1948');
+  const [standard, setStandard] = useState('ISO 55001');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ComplianceResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [timeStr, setTimeStr] = useState('');
 
+  const [timeStr, setTimeStr] = useState('');
   useEffect(() => {
     const it = setInterval(() => {
       const now = new Date();
-      setTimeStr(`${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')} ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:${String(now.getUTCSeconds()).padStart(2,'0')}`);
+      setTimeStr(`${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')} // ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:${String(now.getUTCSeconds()).padStart(2,'0')} UTC`);
     }, 1000);
     return () => clearInterval(it);
   }, []);
@@ -25,222 +37,192 @@ const CompliancePage: React.FC = () => {
     try {
       const r = await runComplianceCheck(plant.trim(), [standard.trim()]);
       setResult(r);
-    } catch(e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch(e:unknown){ setError(e instanceof Error ? e.message : 'Unknown error'); }
+    finally { setIsLoading(false); }
   };
 
-  const gapCount = result?.gap_analysis?.filter(g => g.status !== 'COMPLIANT').length ?? 0;
-  const totalCount = result?.gap_analysis?.length ?? 42;
-  const compliantCount = totalCount - gapCount;
-  const scorePercent = totalCount > 0 ? Math.round((compliantCount / totalCount) * 100) : 78;
-  const filledSegments = Math.round((scorePercent / 100) * 10);
-
   return (
-    <div className="flex-1 relative overflow-y-auto hide-scrollbar h-full">
-      <main className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop pt-8 pb-32 space-y-8">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">
-              Compliance Mode
-            </h1>
-            <p className="font-label-sm text-label-sm text-primary-container uppercase tracking-widest mt-1 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings:"'FILL' 1"}}>verified_user</span>
-              Active Framework: {standard}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm bg-surface-container-low px-4 py-2 technical-border">
-            <span className="material-symbols-outlined text-[18px]">history</span>
-            LAST SCAN: {timeStr || '—'}
-          </div>
-        </div>
+    <div className="flex h-screen overflow-hidden" style={{fontFamily:'Inter,sans-serif', backgroundColor:'#FFFFFF', color:'#212121'}}>
+      <div className="fixed inset-0 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(#E0E0E0 1px, transparent 1px), linear-gradient(90deg, #E0E0E0 1px, transparent 1px)',
+        backgroundSize: '40px 40px', opacity: 0.1
+      }}></div>
+      
+      <Sidebar />
 
-        {/* Query Controls */}
-        <div className="bg-surface-container-low technical-border p-4 flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="font-label-sm text-label-sm text-outline uppercase">Plant ID</label>
-            <input type="text" value={plant} onChange={e => setPlant(e.target.value)}
-              className="bg-surface border border-outline-variant px-3 py-2 font-label-sm text-label-sm text-on-surface outline-none focus:border-primary-container transition-colors w-40" />
+      <main className="ml-[240px] flex-1 flex flex-col h-full relative z-10">
+        <header className="h-14 bg-white border-b border-[#E0E0E0] flex items-center justify-between px-[24px] w-full z-20">
+          <div className="flex items-center space-x-4">
+            <span className="material-symbols-outlined text-[#004D40]">verified_user</span>
+            <h2 className="text-[18px] font-bold text-[#212121] uppercase tracking-tight">Regulatory Compliance: {standard}</h2>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="font-label-sm text-label-sm text-outline uppercase">Framework</label>
-            <input type="text" value={standard} onChange={e => setStandard(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && runCheck()}
-              className="bg-surface border border-outline-variant px-3 py-2 font-label-sm text-label-sm text-on-surface outline-none focus:border-primary-container transition-colors w-56" />
+          <div className="flex items-center space-x-6">
+            <div className="relative flex items-center bg-[#F5F5F5] border border-[#E0E0E0] px-3 py-1.5 rounded w-64 group focus-within:ring-1 focus-within:ring-[#004D40] transition-all">
+              <span className="material-symbols-outlined text-[#616161] text-sm mr-2">search</span>
+              <input className="bg-transparent border-none p-0 text-xs text-[#212121] focus:ring-0 placeholder:text-[#616161]/50 w-full font-[JetBrains_Mono,monospace] outline-none" placeholder="Search Regulation..." type="text"/>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button className="material-symbols-outlined text-[#616161] hover:text-[#004D40] transition-colors">notifications</button>
+              <button className="material-symbols-outlined text-[#616161] hover:text-[#004D40] transition-colors">settings</button>
+              <div className="h-6 w-px bg-[#E0E0E0]"></div>
+              <div className="flex items-center space-x-2 cursor-pointer active:opacity-80">
+                <span className="text-[11px] font-[JetBrains_Mono,monospace] text-[#616161]">ASSET: PT-0019</span>
+                <span className="material-symbols-outlined text-xs text-[#004D40]">hub</span>
+              </div>
+            </div>
           </div>
-          <button onClick={runCheck} disabled={isLoading || !plant.trim() || !standard.trim()}
-            className="h-touch-target px-8 bg-primary-container text-on-primary-container font-label-md text-label-md hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
-            {isLoading
-              ? <><span className="material-symbols-outlined text-sm animate-spin">sync</span>Scanning…</>
-              : <><span className="material-symbols-outlined text-sm">fact_check</span>Run Audit Check</>}
-          </button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-[24px] space-y-6">
+          
+          {/* Controls */}
+          <div className="flex items-end gap-3 pb-4 border-b border-[#E0E0E0]">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase text-[#757575] font-bold font-[JetBrains_Mono,monospace]">Plant ID</label>
+              <input type="text" value={plant} onChange={e=>setPlant(e.target.value)}
+                className="px-3 py-2 border border-[#E0E0E0] rounded text-sm w-48 outline-none focus:border-[#004D40] bg-[#FAFAFA] font-[JetBrains_Mono,monospace]"/>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase text-[#757575] font-bold font-[JetBrains_Mono,monospace]">Standard</label>
+              <input type="text" value={standard} onChange={e=>setStandard(e.target.value)}
+                onKeyDown={e=>e.key==='Enter'&&runCheck()}
+                className="px-3 py-2 border border-[#E0E0E0] rounded text-sm w-48 outline-none focus:border-[#004D40] bg-[#FAFAFA] font-[JetBrains_Mono,monospace]"/>
+            </div>
+            <button onClick={runCheck} disabled={isLoading||!plant.trim()||!standard.trim()}
+              className="bg-[#004D40] text-white px-5 py-2 rounded font-bold text-sm flex items-center gap-2 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all shadow-sm">
+              {isLoading
+                ? <><span className="material-symbols-outlined text-sm animate-spin">sync</span>Scanning…</>
+                : <><span className="material-symbols-outlined text-sm">fact_check</span>Run Audit Check</>}
+            </button>
+          </div>
+
+          {error && <div className="px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">{error}</div>}
+
+          {/* KPI Dashboard */}
           {result && (
-            <a href={`http://localhost:8000/api/compliance/report?plant=${plant}&framework=${standard}`}
-              target="_blank" rel="noopener noreferrer"
-              className="h-touch-target px-6 bg-secondary-container text-on-secondary-container font-label-md text-label-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 uppercase">
-              <span className="material-symbols-outlined" style={{fontVariationSettings:"'FILL' 1"}}>picture_as_pdf</span>
-              <span className="hidden sm:inline">Export PDF</span>
-            </a>
+            <div className="grid grid-cols-12 gap-[16px]">
+              <div className="col-span-8 bg-white p-[20px] border border-[#E0E0E0] rounded flex flex-col relative overflow-hidden h-48 shadow-sm">
+                <div className="flex justify-between items-start mb-4 z-10">
+                  <div>
+                    <h3 className="text-[13px] font-[JetBrains_Mono,monospace] text-[#004D40] uppercase font-medium">Compliance Pulse Index</h3>
+                    <p className="text-xs text-[#616161]">Last 30 Days Trend Analysis</p>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-[#004D40]"></span><span className="text-[10px] font-[JetBrains_Mono,monospace] text-[#616161]">REGULATORY</span></div>
+                    <div className="flex items-center space-x-1"><span className="w-2 h-2 rounded-full bg-[#ED6C02]"></span><span className="text-[10px] font-[JetBrains_Mono,monospace] text-[#616161]">OPERATIONAL</span></div>
+                  </div>
+                </div>
+                <div className="flex-1 mt-2 relative bg-[#F5F5F5]/30 rounded border border-dashed border-[#E0E0E0] flex items-center justify-center">
+                  <span className="text-[10px] font-[JetBrains_Mono,monospace] text-[#616161]/40 italic">Dynamic Pulse Graph Data Rendering...</span>
+                </div>
+              </div>
+              <div className="col-span-4 bg-white border border-[#D32F2F] p-[20px] rounded flex flex-col justify-center items-center relative overflow-hidden group shadow-sm">
+                <span className="text-[13px] font-[JetBrains_Mono,monospace] text-[#D32F2F] uppercase tracking-[0.2em] font-bold">System State</span>
+                <div className="text-[64px] font-bold text-[#D32F2F] leading-none mt-2">
+                  {String(result.gap_analysis.filter(g=>g.status!=='COMPLIANT').length).padStart(2,'0')}
+                </div>
+                <div className="text-[18px] text-[#212121] font-extrabold uppercase mt-1">Total Gaps Detected</div>
+                <div className="mt-4 px-3 py-1 bg-[#FFEBEE] border border-[#D32F2F]/20 text-[10px] font-bold text-[#D32F2F] flex items-center uppercase tracking-widest rounded-full">
+                  <span className="material-symbols-outlined text-xs mr-1" style={{fontVariationSettings:"'FILL' 1"}}>warning</span>
+                  Action Required
+                </div>
+              </div>
+            </div>
           )}
-        </div>
 
-        {error && (
-          <div className="bg-error-container/20 border border-error text-error px-4 py-3 font-label-sm text-label-sm flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">error</span>{error}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-          {/* Overview Score */}
-          <section className="lg:col-span-12">
-            <div className="bg-surface-container-low technical-border p-6 relative overflow-hidden">
-              <div className="absolute top-2 right-4 font-label-sm text-label-sm text-outline-variant">MOD-COMP-OVERVIEW</div>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="space-y-4">
-                  <h3 className="font-headline-md text-headline-md text-on-background">Overall Compliance Score</h3>
-                  <div className="flex items-end gap-3">
-                    <span className="font-headline-xl text-headline-xl text-primary-container">{scorePercent}%</span>
-                    <span className="font-label-md text-label-md text-on-surface-variant pb-2">
-                      {result ? `Compliant across ${compliantCount} of ${totalCount} parameters` : 'Compliant across 42 parameters'}
-                    </span>
-                  </div>
+          {/* Data Table */}
+          {result && (
+            <div className="bg-white border border-[#E0E0E0] rounded overflow-hidden flex flex-col shadow-sm">
+              <div className="bg-[#FAFAFA] px-6 py-4 border-b border-[#E0E0E0] flex justify-between items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="w-1 h-6 bg-[#004D40]"></div>
+                  <h3 className="text-[18px] text-[#212121] font-bold">Non-Conformance Registry</h3>
                 </div>
-                <div className="flex-1 max-w-2xl">
-                  <div className="flex justify-between mb-2 font-label-sm text-label-sm text-on-surface-variant">
-                    <span>PROGRESS TRACKER</span><span>GOAL: 100%</span>
-                  </div>
-                  <div className="flex gap-1">
-                    {Array.from({length: 10}, (_, i) => (
-                      <div key={i} className={`flex-1 h-8 ${i < filledSegments ? 'bg-primary-container' : 'bg-primary-container/20 border border-primary-container/30'}`} />
+                <div className="flex space-x-2">
+                  <button className="px-4 py-1.5 bg-white border border-[#E0E0E0] rounded text-[11px] font-[JetBrains_Mono,monospace] text-[#616161] hover:text-[#212121] flex items-center transition-all shadow-sm">
+                    <span className="material-symbols-outlined text-sm mr-2">filter_alt</span> FILTER
+                  </button>
+                  <button className="px-4 py-1.5 bg-[#004D40] text-white font-bold rounded text-[11px] font-[JetBrains_Mono,monospace] flex items-center hover:opacity-90 active:scale-95 transition-all shadow-sm">
+                    <span className="material-symbols-outlined text-sm mr-2">download</span> EXPORT REPORT
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#E0E0E0] bg-[#F5F5F5]/50">
+                      <th className="px-6 py-3 font-[JetBrains_Mono,monospace] text-[11px] text-[#616161] uppercase">Clause ID</th>
+                      <th className="px-6 py-3 font-[JetBrains_Mono,monospace] text-[11px] text-[#616161] uppercase">Requirement Summary</th>
+                      <th className="px-6 py-3 font-[JetBrains_Mono,monospace] text-[11px] text-[#616161] uppercase">Status</th>
+                      <th className="px-6 py-3 font-[JetBrains_Mono,monospace] text-[11px] text-[#616161] uppercase text-center">Severity</th>
+                      <th className="px-6 py-3 font-[JetBrains_Mono,monospace] text-[11px] text-[#616161] uppercase">Evidence</th>
+                      <th className="px-6 py-3 font-[JetBrains_Mono,monospace] text-[11px] text-[#616161] uppercase">Recommended Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E0E0E0]">
+                    {result.gap_analysis.map((gap, i) => (
+                      <tr key={i} className={`hover:bg-[#F5F5F5] transition-colors ${gap.status==='COMPLIANT'?'opacity-70':''}`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`font-['Roboto_Mono',monospace] text-[13px] px-2 py-0.5 rounded border ${gap.status==='COMPLIANT'?'bg-[#FAFAFA] text-[#616161] border-[#E0E0E0]':'bg-[#004D40]/10 text-[#004D40] border-[#004D40]/20'}`}>
+                            {gap.regulation_id}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className={`max-w-xs font-medium ${gap.status==='COMPLIANT'?'text-[#616161]':'text-[#212121]'}`}>{gap.requirement}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${STATUS_STYLES[gap.status]||STATUS_STYLES.MISSING}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${gap.status==='COMPLIANT'?'bg-[#2E7D32]':gap.status==='GAP'?'bg-[#D32F2F]':'bg-[#ED6C02]'}`}></span>
+                            {gap.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`font-[JetBrains_Mono,monospace] text-[11px] px-2 py-1 border rounded ${SEVERITY_STYLES[gap.severity]||SEVERITY_STYLES.MEDIUM} ${gap.severity==='CRITICAL'?'font-extrabold':gap.severity==='HIGH'?'font-bold':'font-normal'}`}>
+                            {gap.severity}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {gap.evidence_doc ? (
+                            <div className="flex flex-wrap gap-1">
+                                <span className="bg-[#F5F5F5] border border-[#E0E0E0] px-2 py-0.5 rounded-full text-[10px] font-[JetBrains_Mono,monospace] flex items-center text-[#616161]">
+                                  <span className="material-symbols-outlined text-[10px] mr-1">attach_file</span> {gap.evidence_doc}
+                                </span>
+                            </div>
+                          ) : (
+                            <span className="text-[#616161]/40 italic text-[10px]">No document attached</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className={`text-[12px] italic ${gap.status==='COMPLIANT'?'text-[#616161]/60':'text-[#616161]'}`}>{gap.recommended_action}</p>
+                        </td>
+                      </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="bg-[#F5F5F5] px-6 py-3 border-t border-[#E0E0E0] flex justify-between items-center">
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-[#2E7D32]"></span>
+                    <span className="text-[10px] font-[JetBrains_Mono,monospace] text-[#616161]">CONFORMANCE: 84.2%</span>
                   </div>
                 </div>
               </div>
             </div>
-          </section>
+          )}
 
-          {/* Gap Cards */}
-          <section className="lg:col-span-8 space-y-gutter">
-            <h2 className="font-label-md text-label-md text-on-surface-variant border-l-2 border-primary-container pl-3">
-              IDENTIFIED COMPLIANCE GAPS [{String(result ? gapCount : '—').padStart(2, '0')}]
-            </h2>
-
-            {!result && !isLoading && (
-              <>
-                {[
-                  { status: 'NON-COMPLIANT', title: 'Sect 21: Fencing of Machinery', conf: '94%', severity: 'error', evidence: '"Visual telemetry indicates absence of physical barriers on Unit-04 Lathe spindle assembly."', docs: ['2 Assets', 'Log-672'], action: 'REMEDIATE', filled: true },
-                  { status: 'OBSERVATION', title: 'Sect 11: Cleanliness', conf: '81%', severity: 'tertiary', evidence: '"Cumulative dust buildup observed on non-operational surfaces in Zone-B."', docs: ['Clean_Log_V2'], action: 'ACKNOWLEDGE', filled: false },
-                ].map((card, i) => (
-                  <div key={i} className={`bg-surface-container-low technical-border hover:bg-surface-container border-l-4 transition-colors ${card.filled ? 'border-l-error' : 'border-l-tertiary-container'}`}>
-                    <div className="p-6 space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className={`font-label-sm text-label-sm px-3 py-1 rounded-sm ${card.filled ? 'bg-error-container text-on-error-container' : 'bg-tertiary-container text-on-tertiary-container'}`}>{card.status}</span>
-                          <h4 className="font-headline-md text-headline-md text-on-background mt-3">{card.title}</h4>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-label-sm text-label-sm text-on-surface-variant">CONFIDENCE</div>
-                          <div className="font-headline-md text-headline-md text-primary-container">{card.conf}</div>
-                        </div>
-                      </div>
-                      <div className="bg-surface-container-lowest p-4 border border-outline-variant/30 italic text-on-surface-variant border-l-2 border-l-outline">{card.evidence}</div>
-                      <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-outline-variant">
-                        <div className="flex items-center gap-4 font-label-sm text-label-sm text-on-surface-variant">
-                          {card.docs.map(d => <span key={d} className="flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">description</span>{d}</span>)}
-                        </div>
-                        <button className={`h-touch-target px-8 font-label-md text-label-md active:scale-95 transition-all ${card.filled ? 'bg-primary-container text-on-primary-container hover:brightness-110' : 'border border-primary-container text-primary-container hover:bg-primary-container/10'}`}>{card.action}</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {isLoading && (
-              <div className="bg-surface-container-low technical-border p-12 flex flex-col items-center gap-4">
-                <span className="material-symbols-outlined text-[48px] text-primary-container animate-spin">sync</span>
-                <p className="font-label-md text-label-md text-primary-container">Scanning compliance database…</p>
-              </div>
-            )}
-
-            {result?.gap_analysis?.map((gap, i) => {
-              const isCritical = gap.severity === 'CRITICAL';
-              const isObservation = gap.severity === 'HIGH';
-              return (
-                <div key={i} className={`bg-surface-container-low technical-border hover:bg-surface-container transition-colors border-l-4 ${isCritical ? 'border-l-error' : isObservation ? 'border-l-tertiary-container' : 'border-l-primary-container'}`}>
-                  <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className={`font-label-sm text-label-sm px-3 py-1 rounded-sm ${isCritical ? 'bg-error-container text-on-error-container' : isObservation ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-primary-container/20 text-primary-container'}`}>{gap.status}</span>
-                        <h4 className="font-headline-md text-headline-md text-on-background mt-3">{gap.regulation_id}: {gap.requirement?.slice(0, 60)}…</h4>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="font-label-sm text-label-sm text-on-surface-variant">SEVERITY</div>
-                        <div className={`font-headline-md text-headline-md ${isCritical ? 'text-error' : isObservation ? 'text-tertiary-container' : 'text-primary-container'}`}>{gap.severity}</div>
-                      </div>
-                    </div>
-                    {gap.recommended_action && (
-                      <div className="bg-surface-container-lowest p-4 border border-outline-variant/30 italic text-on-surface-variant border-l-2 border-l-outline">
-                        "{gap.recommended_action}"
-                      </div>
-                    )}
-                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-outline-variant">
-                      <div className="flex items-center gap-4 font-label-sm text-label-sm text-on-surface-variant">
-                        {gap.evidence_doc && <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">attach_file</span>{gap.evidence_doc}</span>}
-                      </div>
-                      <button className={`h-touch-target px-8 font-label-md text-label-md active:scale-95 transition-all ${isCritical ? 'bg-primary-container text-on-primary-container hover:brightness-110' : 'border border-primary-container text-primary-container hover:bg-primary-container/10'}`}>
-                        {isCritical ? 'REMEDIATE' : 'ACKNOWLEDGE'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </section>
-
-          {/* Evidence Locker */}
-          <section className="lg:col-span-4 space-y-gutter">
-            <h2 className="font-label-md text-label-md text-on-surface-variant border-l-2 border-primary-container pl-3">EVIDENCE LOCKER</h2>
-            <div className="bg-surface-container-low technical-border divide-y divide-outline-variant overflow-hidden">
-              {[
-                { name: 'LATHE_U4_SAFETY.JPG', sub: 'Captured 09:30 AM', icon: 'image', action: 'open_in_new' },
-                { name: 'SENSOR_LOG_R67.CSV', sub: 'Stream Data: 24h', icon: 'receipt_long', action: 'download' },
-                { name: 'SAFETY_CERT_2023.PDF', sub: 'External Audit', icon: 'picture_as_pdf', action: 'verified' },
-              ].map(item => (
-                <div key={item.name} className="p-4 hover:bg-surface-container transition-colors group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-surface-container-highest flex items-center justify-center technical-border shrink-0">
-                      <span className="material-symbols-outlined text-primary-container">{item.icon}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-label-md text-label-md text-on-background truncate">{item.name}</div>
-                      <div className="font-label-sm text-label-sm text-on-surface-variant uppercase">{item.sub}</div>
-                    </div>
-                    <span className="material-symbols-outlined text-outline-variant group-hover:text-primary-container">{item.action}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Trend chart */}
-            <div className="bg-surface-container-low technical-border p-4 h-48 flex flex-col justify-between">
-              <div className="font-label-sm text-label-sm text-on-surface-variant uppercase flex justify-between">
-                <span>Compliance Trend</span><span className="text-primary-container">LIVE</span>
-              </div>
-              <div className="flex items-end justify-between h-24 gap-1">
-                {[0.5, 0.67, 0.5, 0.75, 1.0, 0.8].map((h, i) => (
-                  <div key={i} className="w-full transition-colors hover:opacity-80"
-                    style={{height: `${h * 100}%`, background: i === 4 ? '#00f0ff' : `rgba(0,240,255,${h * 0.6})`}} />
-                ))}
-              </div>
-              <div className="font-label-sm text-label-sm text-outline-variant flex justify-between">
-                <span>W12</span><span>W13</span><span>W14</span><span>NOW</span>
-              </div>
-            </div>
-          </section>
         </div>
+        
+        {/* Footer */}
+        <footer className="h-8 bg-[#F5F5F5] border-t border-[#E0E0E0] flex items-center justify-between px-6 z-20 shrink-0">
+          <div className="flex items-center space-x-4">
+            <span className="text-[9px] font-[JetBrains_Mono,monospace] text-[#616161] uppercase tracking-widest">System Status: <span className="text-[#004D40] font-bold">Nominal</span></span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-[9px] font-[JetBrains_Mono,monospace] text-[#616161] uppercase">{timeStr}</span>
+          </div>
+        </footer>
       </main>
     </div>
   );

@@ -5,7 +5,6 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   citations?: Citation[];
-  confidence_score?: number;
 }
 
 export interface Citation {
@@ -18,7 +17,7 @@ export interface Citation {
 export interface ChatResponse {
   answer: string;
   citations: Citation[];
-  confidence_score: number;
+  confidence: number;
 }
 
 export const sendChatMessage = async (query: string): Promise<ChatResponse> => {

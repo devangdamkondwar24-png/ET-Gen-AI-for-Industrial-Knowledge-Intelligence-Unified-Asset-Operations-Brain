@@ -1,38 +1,40 @@
 import React, { useState } from 'react';
+import Sidebar from '../components/Sidebar';
 import { runRcaAnalysis, type RCAResponse, type RCAHypothesis } from '../api/agents';
 
+// ── Confidence badge colors ────────────────────────────────────────────────────
 const confBadge: Record<string, string> = {
-  HIGH: 'bg-primary-container text-on-primary-container',
-  MEDIUM: 'bg-secondary-container text-on-secondary-container',
-  LOW: 'bg-surface-container-highest text-on-surface-variant',
+  HIGH: 'bg-[#004D40] text-white',
+  MEDIUM: 'bg-[#FFB300] text-[#212121]',
+  LOW: 'bg-[#EEEEEE] text-[#616161]',
 };
 
-const HypCard: React.FC<{hyp: RCAHypothesis; active: boolean; onClick: () => void}> = ({hyp, active, onClick}) => (
-  <div
-    onClick={onClick}
-    className={`technical-border cursor-pointer transition-all hover:bg-surface-container border-l-4 ${active ? 'active-module-border bg-surface-container border-l-primary-container' : 'bg-surface-container-low border-l-transparent'}`}
-  >
-    <div className="p-4 space-y-3">
-      <div className="flex justify-between items-start">
-        <span className="font-label-sm text-label-sm text-primary-container bg-primary-container/10 px-2 py-0.5 border border-primary-container/20">{hyp.id}</span>
-        <div className={`font-label-sm text-label-sm px-2 py-0.5 flex items-center gap-1 ${confBadge[hyp.confidence_label] ?? confBadge.LOW}`}>
-          <span className="material-symbols-outlined text-[12px]">{hyp.confidence_label === 'HIGH' ? 'verified' : 'warning'}</span>
-          {hyp.confidence_label}
-        </div>
+// ── Hypothesis card ──────────────────────────────────────────────────────────
+const HypCard: React.FC<{hyp: RCAHypothesis; active: boolean; onClick: ()=>void}> = ({hyp, active, onClick}) => (
+  <div onClick={onClick} style={active?{borderLeft:'4px solid #004D40', background:'#F1F8F7'}:{}}
+    className={`p-4 border border-[#E0E0E0] cursor-pointer transition-all ${active?'':'bg-[#FAFAFA] hover:bg-[#EEEEEE]'}`}>
+    <div className="flex justify-between items-start mb-2">
+      <span className="text-[10px] text-[#004D40] px-2 py-0.5 bg-[#004D40]/5 rounded border border-[#004D40]/10" style={{fontFamily:'JetBrains Mono,monospace'}}>{hyp.id}</span>
+      <div className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${confBadge[hyp.confidence_label]??confBadge.LOW}`}>
+        <span className="material-symbols-outlined text-[12px]">{hyp.confidence_label==='HIGH'?'verified':'warning'}</span>
+        {hyp.confidence_label} CONFIDENCE
       </div>
-      <h4 className="font-headline-md text-headline-md text-on-background text-[18px] leading-snug">{hyp.title}</h4>
-      <p className="font-body-md text-sm text-on-surface-variant leading-relaxed">{hyp.description}</p>
-      <div className="flex items-center gap-3 pt-1">
-        <div className="flex-1 h-1.5 bg-surface-container-highest overflow-hidden">
-          <div className="bg-primary-container h-full transition-all" style={{width: `${hyp.confidence}%`}} />
+    </div>
+    <h4 className="text-[18px] font-semibold text-[#212121] mb-1" style={{lineHeight:1.4}}>{hyp.title}</h4>
+    <p className="text-[#757575] text-[13px] mb-4 leading-[1.5]">{hyp.description}</p>
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="w-32 h-1.5 bg-[#E0E0E0] rounded-full overflow-hidden">
+          <div className="bg-[#004D40] h-full" style={{width:`${hyp.confidence}%`}}/>
         </div>
-        <span className="font-label-sm text-label-sm text-primary-container shrink-0">{hyp.confidence}%</span>
-        <span className="material-symbols-outlined text-primary-container text-sm">arrow_forward_ios</span>
+        <span className="text-[#004D40] text-[12px]" style={{fontFamily:'JetBrains Mono,monospace'}}>{hyp.confidence}%</span>
       </div>
+      <span className="material-symbols-outlined text-[#004D40]">arrow_forward_ios</span>
     </div>
   </div>
 );
 
+// ── RCA Page ──────────────────────────────────────────────────────────────────
 const RCAPage: React.FC = () => {
   const [assetId, setAssetId] = useState('P-101');
   const [query, setQuery] = useState('');
@@ -47,147 +49,163 @@ const RCAPage: React.FC = () => {
     try {
       const r = await runRcaAnalysis(assetId.trim(), query.trim());
       setResult(r); setActiveIdx(0);
-    } catch(e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch(e:unknown){ setError(e instanceof Error ? e.message : 'Unknown error'); }
+    finally { setIsLoading(false); }
   };
 
   const activeHyp = result?.hypotheses?.[activeIdx];
 
   return (
-    <div className="flex-1 relative overflow-y-auto hide-scrollbar h-full">
-      <main className="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop pt-8 pb-32 space-y-8">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">
-              Root Cause Analysis
-            </h1>
-            <p className="font-label-sm text-label-sm text-primary-container uppercase tracking-widest mt-1 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">analytics</span>
-              Asset: {assetId || '—'}
-            </p>
-          </div>
-          {result && (
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm bg-surface-container-low px-4 py-2 technical-border">
-              <span className="material-symbols-outlined text-primary-container text-[18px]">analytics</span>
-              {result.hypotheses?.length ?? 0} HYPOTHESES GENERATED
-            </div>
-          )}
+    <div className="flex h-screen overflow-hidden" style={{fontFamily:'Inter,sans-serif', background:'#FFFFFF', color:'#212121'}}>
+      <Sidebar />
+      {/* Header */}
+      <header className="fixed top-0 right-0 w-[calc(100%-240px)] h-12 bg-white border-b border-[#E0E0E0] flex justify-between items-center px-[24px] z-10">
+        <div className="flex items-center gap-4">
+          <span className="material-symbols-outlined text-[#004D40]">search</span>
+          <span className="text-[14px] text-[#616161]">RCA Report: {assetId || '—'}</span>
         </div>
+        <div className="flex items-center gap-6">
+          <span className="text-[10px] text-[#004D40] bg-[#004D40]/5 px-2 py-0.5 rounded border border-[#004D40]/20" style={{fontFamily:'JetBrains Mono,monospace'}}>SYSTEM STABLE</span>
+          <div className="flex items-center gap-4 text-[#616161]">
+            <span className="material-symbols-outlined hover:text-[#004D40] cursor-pointer transition-colors">notifications</span>
+            <span className="material-symbols-outlined hover:text-[#004D40] cursor-pointer transition-colors">help_outline</span>
+            <span className="material-symbols-outlined hover:text-[#004D40] cursor-pointer transition-colors">account_circle</span>
+          </div>
+          <span className="font-semibold text-[#212121] text-[14px]">RCA Engine v2.4</span>
+        </div>
+      </header>
 
-        {/* Query Bar */}
-        <div className="bg-surface-container-low technical-border p-4 flex flex-wrap items-end gap-3">
+      {/* Main */}
+      <main className="ml-[240px] pt-12 min-h-screen p-[24px] bg-white flex flex-col">
+        {/* Query bar (new for interactive version) */}
+        <div className="mb-[16px] flex items-end gap-3 pb-4 border-b border-[#E0E0E0]">
           <div className="flex flex-col gap-1">
-            <label className="font-label-sm text-label-sm text-outline uppercase">Asset ID</label>
-            <input id="rca-asset-id" type="text" value={assetId} onChange={e => setAssetId(e.target.value)}
-              className="bg-surface border border-outline-variant px-3 py-2 font-label-sm text-label-sm text-on-surface outline-none focus:border-primary-container transition-colors w-32" />
+            <label className="text-[10px] uppercase text-[#757575] font-bold" style={{fontFamily:'JetBrains Mono,monospace'}}>Asset ID</label>
+            <input id="rca-asset-id" type="text" value={assetId} onChange={e=>setAssetId(e.target.value)}
+              className="px-3 py-2 border border-[#E0E0E0] rounded text-sm w-32 outline-none focus:border-[#004D40] bg-[#FAFAFA]"/>
           </div>
-          <div className="flex-1 flex flex-col gap-1 min-w-[200px]">
-            <label className="font-label-sm text-label-sm text-outline uppercase">Failure Query</label>
-            <input id="rca-query" type="text" value={query} onChange={e => setQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && runAnalysis()}
+          <div className="flex-1 flex flex-col gap-1">
+            <label className="text-[10px] uppercase text-[#757575] font-bold" style={{fontFamily:'JetBrains Mono,monospace'}}>Failure Query</label>
+            <input id="rca-query" type="text" value={query} onChange={e=>setQuery(e.target.value)}
+              onKeyDown={e=>e.key==='Enter'&&runAnalysis()}
               placeholder="e.g. Why did pump P-101 experience a seal failure?"
-              className="bg-surface border border-outline-variant px-3 py-2 font-label-sm text-label-sm text-on-surface outline-none focus:border-primary-container transition-colors placeholder:text-outline" />
+              className="px-3 py-2 border border-[#E0E0E0] rounded text-sm outline-none focus:border-[#004D40] bg-[#FAFAFA]"/>
           </div>
-          <button id="btn-run-rca" onClick={runAnalysis} disabled={isLoading || !assetId.trim() || !query.trim()}
-            className="h-touch-target px-8 bg-primary-container text-on-primary-container font-label-md text-label-md hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+          <button id="btn-run-rca" onClick={runAnalysis} disabled={isLoading||!assetId.trim()||!query.trim()}
+            className="bg-[#004D40] text-white px-5 py-2 rounded font-bold text-sm flex items-center gap-2 hover:bg-[#00695C] disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all shadow-sm">
             {isLoading
               ? <><span className="material-symbols-outlined text-sm animate-spin">sync</span>Running…</>
               : <><span className="material-symbols-outlined text-sm">analytics</span>Run Analysis</>}
           </button>
         </div>
 
-        {error && (
-          <div className="bg-error-container/20 border border-error text-error px-4 py-3 font-label-sm text-label-sm flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">error</span>{error}
+        {/* Context header (matches Stitch) */}
+        <div className="mb-[16px] flex items-end justify-between">
+          <div>
+            <nav className="flex text-[11px] text-[#757575] gap-2 mb-1 uppercase tracking-tighter">
+              <span>Manufacturing</span><span>/</span><span>Fluid Handling</span><span>/</span>
+              <span className="text-[#004D40] font-bold">{assetId}</span>
+            </nav>
+            <h2 className="text-[32px] font-semibold text-[#212121]" style={{letterSpacing:'-0.02em',lineHeight:1.2}}>
+              {result ? 'Pump Assembly Analysis' : 'Enter a Query Above'}
+            </h2>
           </div>
-        )}
+          {result && (
+            <div className="flex gap-2">
+              <div className="bg-[#FAFAFA] px-4 py-2 border border-[#E0E0E0] flex items-center gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-[#757575] uppercase">Hypotheses</span>
+                  <span className="text-[#004D40] font-bold" style={{fontFamily:'JetBrains Mono,monospace'}}>{result.hypotheses?.length ?? 0}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* Idle state */}
+        {error && <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">{error}</div>}
+
         {!result && !isLoading && !error && (
-          <div className="bg-surface-container-low technical-border p-16 flex flex-col items-center gap-4 text-center">
-            <span className="material-symbols-outlined text-[64px] text-outline">analytics</span>
-            <p className="font-headline-md text-headline-md text-on-surface-variant">No Analysis Run Yet</p>
-            <p className="font-body-md text-on-surface-variant/60">Enter an Asset ID and failure query above, then click "Run Analysis".</p>
+          <div className="flex-1 flex items-center justify-center min-h-[400px]">
+            <div className="text-center space-y-3">
+              <span className="material-symbols-outlined text-[64px] text-[#E0E0E0] block">analytics</span>
+              <p className="text-[#212121] font-semibold">No Analysis Run Yet</p>
+              <p className="text-[#757575] text-sm">Enter an Asset ID and failure query above, then click "Run Analysis".</p>
+            </div>
           </div>
         )}
 
-        {/* Loading state */}
-        {isLoading && (
-          <div className="bg-surface-container-low technical-border p-16 flex flex-col items-center gap-4">
-            <span className="material-symbols-outlined text-[64px] text-primary-container animate-spin">sync</span>
-            <p className="font-label-md text-label-md text-primary-container">Running RCA Engine…</p>
-          </div>
-        )}
-
-        {/* Results Grid */}
         {result && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter" style={{minHeight: '60vh'}}>
-            {/* Hypotheses List */}
-            <section className="lg:col-span-4 space-y-gutter">
-              <h2 className="font-label-md text-label-md text-on-surface-variant border-l-2 border-primary-container pl-3">
-                GENERATED HYPOTHESES [{result.hypotheses?.length ?? 0}]
-              </h2>
-              <div className="space-y-3 custom-scrollbar overflow-y-auto" style={{maxHeight: '65vh'}}>
-                {result.hypotheses?.length > 0
-                  ? result.hypotheses.map((h, i) => (
-                      <HypCard key={i} hyp={h} active={i === activeIdx} onClick={() => setActiveIdx(i)} />
-                    ))
-                  : <p className="font-label-sm text-label-sm text-on-surface-variant p-4 technical-border">No hypotheses generated.</p>}
+          <div className="grid grid-cols-12 gap-[16px]" style={{height:'calc(100vh - 280px)'}}>
+            {/* Left: Hypotheses list */}
+            <section className="col-span-4 flex flex-col gap-[16px]">
+              <div className="bg-white border border-[#E0E0E0] p-[20px] flex-1 overflow-y-auto relative">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-[18px] font-semibold text-[#212121] flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#004D40]">analytics</span>
+                    Generated Hypotheses
+                  </h3>
+                  <span className="text-[10px] text-[#757575]" style={{fontFamily:'JetBrains Mono,monospace'}}>{result.hypotheses?.length ?? 0} RESULTS</span>
+                </div>
+                <div className="space-y-[16px]">
+                  {result.hypotheses?.length > 0
+                    ? result.hypotheses.map((h,i)=><HypCard key={i} hyp={h} active={i===activeIdx} onClick={()=>setActiveIdx(i)}/>)
+                    : <p className="text-[#757575] text-sm">No hypotheses generated.</p>}
+                </div>
+                <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"/>
               </div>
             </section>
 
-            {/* Evidence Panel */}
-            <section className="lg:col-span-8">
-              <div className="bg-surface-container-low technical-border flex flex-col" style={{minHeight: '65vh'}}>
-                <div className="p-4 border-b border-outline-variant bg-surface-container flex items-center justify-between">
-                  <h3 className="font-label-md text-label-md uppercase">Evidence & Citations</h3>
-                  <button className="h-touch-target px-6 bg-primary-container text-on-primary-container font-label-md text-label-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">save</span>EXPORT REPORT
+            {/* Right: Evidence panel */}
+            <section className="col-span-8 h-full">
+              <div className="bg-white border border-[#E0E0E0] h-full flex flex-col overflow-hidden">
+                <div className="p-4 border-b border-[#E0E0E0] flex items-center justify-between bg-[#FAFAFA]">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-[18px] font-semibold text-[#212121]">Evidence & Citations</h3>
+                  </div>
+                  <button className="bg-[#004D40] text-white px-3 py-1 rounded text-[11px] font-bold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[14px]">save</span>
+                    EXPORT REPORT
                   </button>
                 </div>
-
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-[20px]">
                   {activeHyp ? (
-                    <div className="space-y-6">
-                      <div className="pb-4 border-b border-outline-variant">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="font-label-sm text-label-sm text-primary-container bg-primary-container/10 px-2 py-0.5 border border-primary-container/20">{activeHyp.id}</span>
-                          <span className={`font-label-sm text-label-sm px-2 py-0.5 ${confBadge[activeHyp.confidence_label] ?? confBadge.LOW}`}>{activeHyp.confidence_label} CONFIDENCE</span>
-                        </div>
-                        <h2 className="font-headline-md text-headline-md text-on-background">{activeHyp.title}</h2>
-                        <p className="font-body-md text-on-surface-variant mt-2 leading-relaxed">{activeHyp.description}</p>
+                    <div className="space-y-5">
+                      <div className="pb-4 border-b border-[#E0E0E0]">
+                        <h2 className="text-[24px] font-semibold text-[#212121]">{activeHyp.title}</h2>
+                        <p className="text-[#757575] text-[14px] mt-2 leading-[1.5]">{activeHyp.description}</p>
                       </div>
-
                       <div>
-                        <h4 className="font-label-md text-label-md text-on-surface-variant border-l-2 border-primary-container pl-3 mb-4">EVIDENCE SOURCES</h4>
+                        <h4 className="font-semibold text-sm text-[#212121] mb-3 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#004D40] text-base">verified</span>
+                          Evidence Sources
+                        </h4>
                         {activeHyp.citations?.length > 0 ? (
-                          <div className="space-y-3">
-                            {activeHyp.citations.map((c, i) => (
-                              <div key={i} className="bg-surface technical-border p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="font-label-sm text-label-sm text-primary-container">{c.doc_id} — Page {c.page}</span>
-                                  <span className="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-0.5">Score: {c.score.toFixed(2)}</span>
+                          <div className="space-y-2">
+                            {activeHyp.citations.map((c,i)=>(
+                              <div key={i} className="p-3 bg-[#F5F5F5] rounded border border-[#E0E0E0]">
+                                <div className="flex justify-between items-start mb-1">
+                                  <span className="text-[11px] text-[#004D40]" style={{fontFamily:'JetBrains Mono,monospace'}}>{c.doc_id} — Page {c.page}</span>
+                                  <span className="text-[10px] bg-[#004D40]/5 text-[#004D40] px-2 py-0.5 rounded font-bold border border-[#004D40]/10">Score: {c.score.toFixed(2)}</span>
                                 </div>
-                                <p className="font-body-md text-sm text-on-surface-variant leading-relaxed">"{c.text_preview}"</p>
+                                <p className="text-xs text-[#616161] leading-relaxed">"{c.text_preview}"</p>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="bg-surface technical-border p-6 flex flex-col items-center gap-3 text-center">
-                            <span className="material-symbols-outlined text-[40px] text-outline">article</span>
-                            <p className="font-label-md text-label-md text-on-surface-variant">No evidence loaded yet</p>
-                            <p className="font-label-sm text-label-sm text-outline">Run the analysis with a live asset query to populate evidence from Neo4j and Elasticsearch.</p>
+                          // Stitch-style "Work Order" placeholder card
+                          <div className="bg-white border border-[#004D40]/20 p-4 rounded-xl shadow-md max-w-xs">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="material-symbols-outlined text-[#004D40] text-[18px]">verified</span>
+                              <span className="font-bold text-[#212121] text-[13px]">No evidence loaded yet</span>
+                            </div>
+                            <p className="text-[11px] text-[#757575] leading-relaxed">Run the analysis with a live asset query to populate evidence from Neo4j and Elasticsearch.</p>
                           </div>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full min-h-[300px]">
-                      <p className="font-label-md text-label-md text-on-surface-variant">Select a hypothesis from the left to view evidence.</p>
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-[#757575]">Select a hypothesis from the left to view evidence.</p>
                     </div>
                   )}
                 </div>

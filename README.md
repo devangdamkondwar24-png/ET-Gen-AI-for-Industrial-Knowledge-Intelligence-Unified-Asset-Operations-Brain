@@ -1,184 +1,88 @@
 # ET Gen: Industrial Knowledge Intelligence Platform
 
-An enterprise-grade, **fully offline** platform designed to eliminate knowledge fragmentation in asset-intensive industries. By unifying engineering drawings, maintenance work orders, safety procedures, inspection reports, and regulatory records into a single navigable knowledge base, it bridges the gap between siloed data and actionable operational insights.
+An enterprise-grade, fully offline platform designed to mitigate knowledge fragmentation in asset-intensive industries. By unifying engineering drawings, maintenance work orders, safety procedures, inspection reports, and regulatory records into a single, navigable knowledge base, this system bridges the gap between siloed data and actionable operational insights.
 
-> **Zero data leakage. Air-gapped deployment. No cloud dependencies.**
-
----
+This repository implements a **fully offline, highly secure Agentic GraphRAG Engine** ensuring zero data leakage for strict enterprise environments.
 
 ## Architecture & Core Technologies
 
-### Backend
-| Component | Technology |
-|---|---|
-| API | FastAPI (Python 3.11) |
-| Knowledge Graph | Neo4j Community Edition — industrial ontology (Equipment → FailureMode → Cause → Action) |
-| Agentic Orchestration | LangGraph multi-agent workflows (RCA, Compliance, Lessons Learned) |
-| Vector + Keyword Search | Elasticsearch 8.x — Hybrid Search (BM25 + kNN cosine similarity) |
-| Embeddings | `sentence-transformers` (`all-MiniLM-L6-v2`) — 384-dim, CPU-only |
-| Generative AI | Ollama (local open-weights LLM, e.g. `llama3.2:1b`, `mistral`) |
-| Document Storage | MinIO — S3-compatible object store |
-| Relational DB | PostgreSQL — job tracking & metadata |
-| Universal Ingestion | MIME-based router (`libmagic`) → Apache Tika, Tesseract OCR, PyMuPDF, Pandas, extract-msg |
-| Proactive Alerts | SSE (`sse-starlette`) — server-sent event stream for live warnings |
-| PDF Evidence Export | ReportLab — offline audit-ready PDF report generation |
+This system is built as a highly robust, containerized microservice architecture.
 
-### Frontend — TECH-OS v2.4
-| Component | Technology |
-|---|---|
-| Framework | React 18 + Vite |
-| Styling | Tailwind CSS with custom Stitch design tokens |
-| Design System | TECH-OS dark-mode HUD — industrial glassmorphic aesthetic |
-| Navigation | Mobile-first bottom navigation bar |
-| Fonts | Geist (headlines), JetBrains Mono (labels), Inter (body) |
+*   **API Backend**: FastAPI (Python 3.11).
+*   **Knowledge Graph**: **Neo4j** Community Edition executing industrial ontology reasoning and tracking asset relationships (e.g., Equipment -> FailureMode -> Cause).
+*   **Agentic Orchestration**: **LangGraph** multi-agent workflows for complex tasks (Root Cause Analysis, Regulatory Compliance, Batch Pattern Intelligence).
+*   **Vector & Keyword Search**: Elasticsearch 8.x executing true **Hybrid Search** (BM25 + kNN using `cosineSimilarity` script scoring).
+*   **Embeddings**: `sentence-transformers` (`all-MiniLM-L6-v2`) generating 384-dimensional dense vectors strictly on CPU.
+*   **Generative AI**: Local **Ollama** container running open-weights models (e.g., `mistral`) for both chat and structured graph extraction.
+*   **Document Storage**: MinIO (S3-compatible object storage) for raw files and OCR assets.
+*   **Relational Database**: PostgreSQL for job tracking and metadata.
+*   **Universal Ingestion**: A robust MIME-based router (`libmagic`) wrapping Apache Tika, Tesseract OCR, PyMuPDF, Pandas (for spreadsheets), and extract-msg (for email archives).
+*   **Frontend**: A generated React SPA via Google Stitch, using a Light Minimalist "Clinical Cockpit" design system.
 
----
+## Phase 3 & 4 Highlights
 
-## Key Features
+- **Industrial Ontology (Neo4j)**: 10 structured nodes (Equipment, FailureMode, Cause, Action, WorkOrder, etc.) with strict Pydantic validation and Cypher constraints.
+- **RCA Agent**: A multi-step LangGraph workflow that retrieves graph history, performs hybrid search for manual evidence, and synthesizes root cause hypotheses with strict citation enforcement.
+- **Compliance Agent**: Automates regulatory gap analysis by cross-referencing Neo4j regulation nodes against searched procedure documentation.
+- **Lessons Learned Job**: A batch intelligence pipeline to detect recurring patterns and write insight nodes back into the graph.
+- **Stitch Frontend**: A complete UI including a Copilot Chat interface, RCA Dashboard, and Compliance Alerts view, all wrapped in a clean, minimalist Light Theme.
 
-### 🤖 Agentic Workflows
-- **RCA Agent** — LangGraph workflow that retrieves asset history from Neo4j, performs hybrid search for manual evidence, and synthesizes ranked root-cause hypotheses with confidence scores and source citations.
-- **Compliance Agent** — Automated regulatory gap analysis cross-referencing Neo4j regulation nodes (OISD-STD-105, Factories Act 1948, PESO SMPV Rules) against procedure documentation. Exports PDF audit packages via ReportLab.
-- **Lessons Learned Engine** — Batch intelligence pipeline detecting recurring failure patterns and writing insight nodes back into the knowledge graph.
+## Recent Stabilizations & Tuning (Performance Fixes)
 
-### 📱 TECH-OS Frontend (Mobile-First)
-- **Copilot Mode** — Industrial chat interface with confidence-scored responses, source citations, and a sliding bottom-sheet evidence drawer.
-- **Evidence Search** — Full-text + semantic search with document-type badges (OISD, Standard, Internal), result highlighting, and asset linkage.
-- **Asset View** — Per-asset HUD showing telemetry logs, compliance status, linked work orders, incident history, and graph relationships.
-- **Compliance Mode** — Industrial gap card workflow with severity coloring (critical/observation), evidence locker, and compliance trend chart.
-- **RCA Mode** — Hypothesis list + evidence panel with confidence bars and citation cards.
-- **Alerts** — Proactive SSE-driven warning drawer for anomaly detection and lessons-learned pushes.
-
-### 🏗️ Regulatory Grounding (India-specific)
-- OISD-STD-105 (Petroleum Sector Safety)
-- Factories Act 1948 (Sections 21, 11, 36, 40)
-- PESO SMPV (Pressure Vessel Rules)
-- Seeded offline into Elasticsearch — no external API calls
-
-### 📄 Universal Document Ingestion
-- PDF (text + scanned/OCR), DOCX, XLSX, CSV, images (JPG/PNG), email archives (.msg)
-- Async OCR fallback via Tesseract when Tika fails on scanned documents
-- Graph triple extraction via Ollama on every ingested chunk
-
----
+- **Enhanced RAG Context Window**: Increased retrieval limit (`top_k=15`) to ensure the LLM has complete visibility across all related timelines and file formats.
+- **Deep Reasoning Timeouts**: Upgraded Nginx proxy and FastAPI internal timeouts to 300 seconds to gracefully handle slow, comprehensive generations from local 7B models.
+- **Prompt Engineering**: Highly constrained system prompts to enforce exact data extraction (numbers, emails, dates) without summarizing away critical evidence.
+- **Mistral 7B**: Pinned `OLLAMA_MODEL=mistral:latest` for superior extraction logic over smaller, lightweight models.
 
 ## Prerequisites
 
-- Docker & Docker Compose
-- Git
-
-> All Python dependencies, Tesseract, libmagic, and Java (Tika) are fully containerized — no host installation needed.
-
----
+*   Docker and Docker Compose
+*   *Note: Python, Tesseract, libmagic, and all external dependencies are fully containerized.*
 
 ## Setup & Running
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/devangdamkondwar24-png/ET-Gen-AI-for-Industrial-Knowledge-Intelligence-Unified-Asset-Operations-Brain.git
-cd "ET-Gen-AI-for-Industrial-Knowledge-Intelligence-Unified-Asset-Operations-Brain"
-```
+The entire backend infrastructure is orchestrated via Docker Compose.
 
-### 2. Start the backend stack
+### 1. Start the Stack
+
+Open a terminal at the root of the project (or in the `backend/` directory) and run:
 ```bash
-cd backend
 docker-compose up -d --build
 ```
+This will spin up:
+- `etgen_postgres` (Port 5432)
+- `etgen_minio` (Ports 9000, 9001)
+- `etgen_elasticsearch` (Port 9200)
+- `etgen_neo4j` (Ports 7474, 7687)
+- `etgen_tika` (Port 9998)
+- `etgen_ollama` (Port 11434)
+- `etgen_ocr_worker` (Background Python worker housing FastAPI, LangGraph, and Ingestion pipelines)
 
-Services started:
-| Container | Port |
-|---|---|
-| `etgen_postgres` | 5432 |
-| `etgen_minio` | 9000, 9001 |
-| `etgen_elasticsearch` | 9200 |
-| `etgen_neo4j` | 7474, 7687 |
-| `etgen_tika` | 9998 |
-| `etgen_ollama` | 11434 |
-| `etgen_ocr_worker` | 8000 |
-
-### 3. Pull a local LLM
-```bash
-docker exec -d etgen_ollama ollama pull llama3.2:1b
-```
-For higher-quality responses (requires more RAM):
+### 2. Pull the Local LLM Model
+Since Ollama starts empty by default, you must pull a model to enable the chat API and graph extraction. In a new terminal, execute:
 ```bash
 docker exec -d etgen_ollama ollama pull mistral
 ```
+*(Note: Downloading `mistral` will take several minutes depending on your internet connection.)*
 
-### 4. Seed regulatory data (first run only)
+### 3. Usage & Testing
+
+You can interact with the system using standard REST calls to the FastAPI backend, or by executing the integrated test suites.
+
+**Verify Logic & Integration (Pass 3):**
+To run the strict multi-pass logic checks for the Neo4j ontology, LangGraph states, and universal routing:
 ```bash
-docker exec etgen_ocr_worker python scripts/seed_indian_regs.py
-docker exec etgen_ocr_worker python scripts/seed_external_incidents.py
+docker exec etgen_ocr_worker python test_phase3.py
 ```
-
-### 5. Run the frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open `http://localhost:5173` in your browser.
-
----
 
 ## System Workflow
 
-```
-Ingest → Route → Parse → OCR Fallback → Extract Graph Triples → Chunk → Index → Search & Synthesize
-```
+**Pipeline:** `Ingest → Route → Parse → OCR fallback → Extract Graph Triples → Normalize → Chunk → Index → Search & Synthesize`
 
-1. **Ingest** — Document uploaded via API, saved to MinIO.
-2. **Route** — `universal_router.py` detects MIME type via `libmagic`.
-3. **Parse & OCR** — Specialized parsers (PyMuPDF, Pandas, Tika); async Tesseract OCR fallback for scanned PDFs.
-4. **Graph Extraction** — `graph_extractor.py` calls Ollama to parse triples into Neo4j.
-5. **Chunk & Index** — Text normalized, chunked, embedded, and indexed into Elasticsearch.
-6. **Agentic Synthesis** — LangGraph agent performs hybrid search + graph traversal → grounded answer with citations.
-
----
-
-## API Endpoints (selected)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/ingest/upload` | Upload any document |
-| `POST` | `/api/agents/chat` | Copilot RAG chat |
-| `POST` | `/api/agents/rca` | Run RCA analysis for an asset |
-| `POST` | `/api/agents/compliance` | Run compliance gap check |
-| `GET` | `/api/alerts/stream` | SSE stream for proactive alerts |
-| `GET` | `/api/compliance/report` | Download PDF audit report |
-| `POST` | `/api/agents/lessons-learned/run` | Trigger lessons-learned batch job |
-| `GET` | `/docs` | FastAPI Swagger UI |
-
----
-
-## Project Structure
-
-```
-et gen/
-├── backend/
-│   ├── agents/          # RCA, Compliance, Lessons Learned LangGraph agents
-│   ├── api/             # FastAPI route handlers
-│   ├── graph/           # Neo4j client & ontology
-│   ├── ingestion/       # Universal router, OCR worker, graph extractor
-│   ├── scripts/         # Seeding scripts for regulations & incidents
-│   ├── dataset/         # Offline corpus (Indian regs, external incidents)
-│   └── docker-compose.yml
-└── frontend/
-    ├── src/
-    │   ├── pages/       # Copilot, Evidence, Asset, Compliance, RCA, Lessons
-    │   ├── components/  # Sidebar (bottom nav), Topbar, Alerts
-    │   ├── api/         # TypeScript API client (agents.ts)
-    │   └── context/     # AppContext (global state)
-    └── tailwind.config.js
-```
-
----
-
-## Design Constraints
-
-- ✅ **Air-gapped** — zero external API calls at runtime
-- ✅ **CPU-only embeddings** — no GPU required
-- ✅ **Mobile-first UI** — thumb-friendly, bottom-nav, large touch targets
-- ✅ **Confidence-first** — every AI answer shows a confidence score and source citations
-- ✅ **Indian regulatory grounding** — OISD, Factories Act, PESO seeded offline
-- ⚠️ **P&ID parsing** — heuristic extraction only; not industrial-grade computer vision
+1. **Ingest:** A document is uploaded via the API and securely saved to MinIO.
+2. **Route:** The `universal_router.py` detects the exact MIME type via `libmagic`.
+3. **Parse & OCR:** The document is sent to specialized parsers (Pandas, PyMuPDF, etc.) or Apache Tika. If Tika fails on a scanned PDF, the async OCR worker activates `pytesseract`.
+4. **Extract Graph:** The `graph_extractor.py` calls Ollama to structurally parse chunks, inserting defined triples into the Neo4j Knowledge Graph.
+5. **Normalize & Chunk:** Extracted text is cleaned and split into boundary-aware hierarchical chunks.
+6. **Index:** Dense vectors are generated and indexed into Elasticsearch alongside exact text and provenance metadata.
+7. **Agentic Synthesis:** A user triggers an agent (e.g., via `/api/agents/rca`). The LangGraph agent executes a Hybrid Search in Elasticsearch and traverses relationships in Neo4j, resulting in a grounded, deterministic answer with strict source citations.

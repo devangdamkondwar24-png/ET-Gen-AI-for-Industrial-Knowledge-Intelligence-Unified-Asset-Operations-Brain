@@ -102,30 +102,14 @@ def run_lessons_learned_pipeline(asset_type: str = None):
         min_count=RECURRENCE_THRESHOLD
     )
 
-    # Fetch mock external incidents
-    external_incidents = []
-    try:
-        es_url = os.environ.get("ELASTICSEARCH_URL", "http://localhost:9200")
-        resp = httpx.post(f"{es_url}/external_incidents/_search", json={"size": 5}, timeout=10)
-        if resp.status_code == 200:
-            hits = resp.json().get("hits", {}).get("hits", [])
-            external_incidents = [h["_source"] for h in hits]
-            logger.info(f"[LessonsLearned] Loaded {len(external_incidents)} external offline incidents.")
-    except Exception as e:
-        logger.warning(f"[LessonsLearned] Could not load external incidents: {e}")
-
-    if not patterns and not external_incidents:
-        logger.info("[LessonsLearned] No internal patterns or external incidents found. Exiting.")
+    if not patterns:
+        logger.info("[LessonsLearned] No recurring patterns found above threshold. Exiting.")
         return {"status": "no_patterns", "insights_written": 0}
 
-    logger.info(f"[LessonsLearned] Found {len(patterns)} internal patterns.")
+    logger.info(f"[LessonsLearned] Found {len(patterns)} recurring patterns.")
 
     # ── Step 2: Generate insights via Ollama ──────────────────
-    context_data = {
-        "internal_patterns": patterns,
-        "external_incidents": external_incidents
-    }
-    prompt = INSIGHT_PROMPT.format(patterns=json.dumps(context_data, indent=2))
+    prompt = INSIGHT_PROMPT.format(patterns=json.dumps(patterns, indent=2))
     raw = _call_ollama(prompt)
 
     if not raw.strip():

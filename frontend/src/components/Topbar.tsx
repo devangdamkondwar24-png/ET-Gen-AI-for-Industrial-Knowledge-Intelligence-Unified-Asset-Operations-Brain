@@ -1,18 +1,26 @@
 import React from 'react';
 
-const Topbar: React.FC = () => {
+interface TopbarProps {
+  title: string;
+  status?: string;
+}
+
+const Topbar: React.FC<TopbarProps> = ({ title, status = 'SYSTEM STABLE' }) => {
   return (
-    <header className="fixed top-0 w-full z-50 flex justify-between items-center px-gutter h-touch-target bg-surface border-b border-outline-variant transition-colors duration-150 ease-in-out">
+    <header className="fixed top-0 right-0 w-[calc(100%-240px)] h-12 bg-[#1a1c1e] border-b border-border-muted flex justify-between items-center px-6 z-10">
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-primary-fixed-dim" data-icon="terminal">terminal</span>
-        <h1 className="font-label-md text-label-md tracking-widest text-primary-fixed-dim uppercase m-0">TECH-OS v2.4</h1>
+        <span className="material-symbols-outlined text-primary text-lg">search</span>
+        <span className="text-sm text-on-surface-variant font-medium">{title}</span>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1 px-2 py-1 bg-surface-container-high border border-outline-variant">
-          <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase">Uplink Stable</span>
+      <div className="flex items-center gap-6">
+        <span className="text-[10px] font-mono text-primary bg-primary-container px-2 py-0.5 rounded border border-primary/20">
+          {status}
+        </span>
+        <div className="flex items-center gap-4 text-on-surface-variant">
+          <span className="material-symbols-outlined text-xl hover:text-primary cursor-pointer transition-colors">notifications</span>
+          <span className="material-symbols-outlined text-xl hover:text-primary cursor-pointer transition-colors">help_outline</span>
+          <span className="material-symbols-outlined text-xl hover:text-primary cursor-pointer transition-colors">account_circle</span>
         </div>
-        <button className="material-symbols-outlined text-primary-fixed-dim hover:bg-surface-container-high transition-colors p-2" data-icon="sensors">sensors</button>
       </div>
     </header>
   );
