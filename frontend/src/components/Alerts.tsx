@@ -41,13 +41,13 @@ const Alerts: React.FC = () => {
   return (
     <div className="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
       {alerts.map(alert => (
-        <div key={alert.id} className="bg-white border-l-4 border-[#D32F2F] shadow-lg rounded p-4 w-80 pointer-events-auto flex gap-3 items-start animate-fade-in-up">
-          <span className="material-symbols-outlined text-[#D32F2F] mt-0.5">warning</span>
+        <div key={alert.id} className="bg-[#1a1c1e] border-l-4 border-[#D32F2F] shadow-lg rounded p-4 w-80 pointer-events-auto flex gap-3 items-start animate-fade-in-up">
+          <span className="material-symbols-outlined text-[#ffb4ab] mt-0.5">warning</span>
           <div className="flex-1">
-            <h4 className="text-[14px] font-bold text-[#212121]">{alert.title}</h4>
-            <p className="text-[12px] text-[#616161] mt-1">{alert.message}</p>
+            <h4 className="text-[14px] font-bold text-[#e2e2e5]">{alert.title}</h4>
+            <p className="text-[12px] text-[#849495] mt-1">{alert.message}</p>
           </div>
-          <button onClick={() => setAlerts(p => p.filter(a => a.id !== alert.id))} className="text-[#616161] hover:text-[#212121]">
+          <button onClick={() => setAlerts(p => p.filter(a => a.id !== alert.id))} className="text-[#849495] hover:text-[#e2e2e5]">
             <span className="material-symbols-outlined text-[16px]">close</span>
           </button>
         </div>

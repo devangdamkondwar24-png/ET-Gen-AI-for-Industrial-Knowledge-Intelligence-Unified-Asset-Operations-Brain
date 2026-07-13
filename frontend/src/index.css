@@ -1,60 +1,111 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ─────────────────────────────────────────────────────────────
+   TECH-OS: Industrial Tech Mode Design System
+   Dark, high-contrast, HUD-inspired theme for field operations
+   ───────────────────────────────────────────────────────────── */
 
 @theme {
-  --color-primary: #004D40;
-  --color-primary-container: #E0F2F1;
-  --color-on-primary: #FFFFFF;
-  --color-surface: #F5F5F5;
-  --color-background-deep: #FFFFFF;
-  --color-on-surface: #212121;
-  --color-on-surface-variant: #424242;
-  --color-surface-slate: #FAFAFA;
-  --color-surface-container: #F0F0F0;
-  --color-border-muted: #E0E0E0;
-  --color-text-muted: #757575;
-  --color-secondary: #FFB300;
-  --color-on-secondary: #212121;
-  --color-alert-critical: #D32F2F;
-  --color-outline: #E0E0E0;
+  /* Surfaces */
+  --color-surface-deep:     #0c0e10;
+  --color-surface:          #121416;
+  --color-surface-low:      #1a1c1e;
+  --color-surface-mid:      #1e2022;
+  --color-surface-high:     #282a2c;
+  --color-surface-highest:  #333537;
+
+  /* On-surface */
+  --color-on-surface:       #e2e2e5;
+  --color-on-surface-dim:   #b9cacb;
+  --color-outline:          #849495;
+  --color-outline-muted:    #3b494b;
+
+  /* Brand */
+  --color-primary:          #00f0ff;
+  --color-primary-dim:      #00dbe9;
+  --color-on-primary:       #002022;
+
+  /* Status */
+  --color-warning:          #ff8a00;
+  --color-warning-dim:      #ffb77f;
+  --color-amber:            #ffd602;
+  --color-error:            #ffb4ab;
+  --color-error-container:  #93000a;
+  --color-success:          #4caf50;
 }
+
+/* ── Reset & base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background-color: var(--color-background-deep);
-  color: var(--color-on-surface);
+  background-color: #121416;
+  color: #e2e2e5;
   overflow-x: hidden;
   font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: #333537; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #849495; }
+
+/* ── Material Symbols ──────────────────────────────────────── */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
 }
 
-.mono-text {
-  font-family: 'JetBrains Mono', monospace;
-}
+/* ── Utility classes ───────────────────────────────────────── */
+.mono-text  { font-family: 'JetBrains Mono', monospace; }
+.font-mono  { font-family: 'JetBrains Mono', monospace; }
 
+/* ── HUD scanning line animation ──────────────────────────── */
 .scanning-line {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00f0ff, transparent);
   position: absolute;
   width: 100%;
   top: 0;
   animation: scan 4s linear infinite;
-  opacity: 0.3;
+  opacity: 0.25;
+}
+@keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+/* ── HUD grid dot overlay ──────────────────────────────────── */
+.hud-grid {
+  background-image: radial-gradient(circle, #333537 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-@keyframes scan {
-  0% { top: 0; }
-  100% { top: 100%; }
-}
-
+/* ── Glass card ─────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(245, 245, 245, 0.8);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border-muted);
+  background: rgba(30, 32, 34, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid #333537;
 }
 
+/* ── Active hypothesis row ──────────────────────────────────── */
 .hyp-active {
-  border-left: 4px solid var(--color-primary);
-  background: rgba(0, 77, 64, 0.05);
+  border-left: 3px solid #00f0ff;
+  background: rgba(0, 240, 255, 0.05);
+}
+
+/* ── Confidence badge colours ───────────────────────────────── */
+.conf-high   { background: rgba(76, 175, 80, 0.12); color: #4caf50;  border-color: rgba(76, 175, 80, 0.3);  }
+.conf-medium { background: rgba(255, 214, 2, 0.12); color: #ffd602;  border-color: rgba(255, 214, 2, 0.3);  }
+.conf-low    { background: rgba(255, 180, 171, 0.12); color: #ffb4ab; border-color: rgba(255, 180, 171, 0.3); }
+
+/* ── Flicker hover on primary buttons ──────────────────────── */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.85; }
+}
+.btn-primary:hover { animation: flicker 0.15s ease-in-out 2; }
+
+/* ── Cyan inner-glow for active states ──────────────────────── */
+.led-active {
+  box-shadow: inset 0 0 0 2px #00f0ff, 0 0 8px rgba(0, 240, 255, 0.3);
 }

@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
 
 const LessonsPage: React.FC = () => (
-  <div className="flex h-screen bg-white">
+  <div className="flex h-screen bg-[#1a1c1e]">
     <Sidebar />
     <div className="flex-1 ml-60 flex flex-col">
       <Topbar title="Lessons Learned & Pattern Intelligence" />
@@ -22,7 +22,7 @@ const LessonsPage: React.FC = () => (
             href="http://localhost:8000/docs#/agents"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-[#002022] text-sm rounded-lg hover:bg-primary/90 transition-colors"
           >
             <span className="material-symbols-outlined text-sm">open_in_new</span>
             Open API Docs
