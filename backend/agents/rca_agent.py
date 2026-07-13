@@ -166,7 +166,7 @@ Based solely on the above evidence, produce a structured RCA report in this JSON
       "rank": 1,
       "hypothesis": "Most likely cause",
       "evidence": ["evidence point 1", "evidence point 2"],
-      "confidence": "High/Medium/Low",
+      "confidence_score": 0.95,
       "citations": ["doc_id:page_number", ...]
     }}
   ],

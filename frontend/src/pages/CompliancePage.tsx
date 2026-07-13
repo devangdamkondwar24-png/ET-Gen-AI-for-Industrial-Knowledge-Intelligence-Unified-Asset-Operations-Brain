@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { runComplianceCheck, type ComplianceResponse } from '../api/agents';
+import { useAppContext } from '../context/AppContext';
 
 const STATUS_STYLES: Record<string, string> = {
   COMPLIANT: 'bg-[#E8F5E9] text-[#2E7D32] border-[#2E7D32]/10',
@@ -16,6 +17,7 @@ const SEVERITY_STYLES: Record<string, string> = {
 
 // ── Compliance Page ──────────────────────────────────────────────────────────
 const CompliancePage: React.FC = () => {
+  const { isTechMode } = useAppContext();
   const [plant, setPlant] = useState('Plant-101');
   const [standard, setStandard] = useState('ISO 55001');
   const [isLoading, setIsLoading] = useState(false);
@@ -50,11 +52,11 @@ const CompliancePage: React.FC = () => {
       
       <Sidebar />
 
-      <main className="ml-[240px] flex-1 flex flex-col h-full relative z-10">
-        <header className="h-14 bg-white border-b border-[#E0E0E0] flex items-center justify-between px-[24px] w-full z-20">
+      <main className={`w-full ${isTechMode ? 'md:ml-[80px]' : 'md:ml-[240px]'} flex-1 flex flex-col h-full relative z-10 transition-all duration-300 pb-16 md:pb-0`}>
+        <header className="h-14 bg-white border-b border-[#E0E0E0] flex items-center justify-between px-[16px] md:px-[24px] w-full z-20 shrink-0">
           <div className="flex items-center space-x-4">
             <span className="material-symbols-outlined text-[#004D40]">verified_user</span>
-            <h2 className="text-[18px] font-bold text-[#212121] uppercase tracking-tight">Regulatory Compliance: {standard}</h2>
+            <h2 className="text-[16px] md:text-[18px] font-bold text-[#212121] uppercase tracking-tight truncate max-w-[150px] md:max-w-none">Compliance: {standard}</h2>
           </div>
           <div className="flex items-center space-x-6">
             <div className="relative flex items-center bg-[#F5F5F5] border border-[#E0E0E0] px-3 py-1.5 rounded w-64 group focus-within:ring-1 focus-within:ring-[#004D40] transition-all">
@@ -142,9 +144,10 @@ const CompliancePage: React.FC = () => {
                   <button className="px-4 py-1.5 bg-white border border-[#E0E0E0] rounded text-[11px] font-[JetBrains_Mono,monospace] text-[#616161] hover:text-[#212121] flex items-center transition-all shadow-sm">
                     <span className="material-symbols-outlined text-sm mr-2">filter_alt</span> FILTER
                   </button>
-                  <button className="px-4 py-1.5 bg-[#004D40] text-white font-bold rounded text-[11px] font-[JetBrains_Mono,monospace] flex items-center hover:opacity-90 active:scale-95 transition-all shadow-sm">
+                  <a href={`http://localhost:8000/api/compliance/report?plant=${plant}&framework=${standard}`} target="_blank" rel="noopener noreferrer" 
+                    className="px-4 py-1.5 bg-[#004D40] text-white font-bold rounded text-[11px] font-[JetBrains_Mono,monospace] flex items-center hover:opacity-90 active:scale-95 transition-all shadow-sm">
                     <span className="material-symbols-outlined text-sm mr-2">download</span> EXPORT REPORT
-                  </button>
+                  </a>
                 </div>
               </div>
 

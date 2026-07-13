@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { sendChatMessage, uploadDocument, type ChatMessage, type Citation } from '../api/agents';
+import { useAppContext } from '../context/AppContext';
 
 // ── Citation chip ─────────────────────────────────────────────────────────────
 const CitationPill: React.FC<{ citation: Citation }> = ({ citation }) => (
@@ -15,25 +16,32 @@ const CitationPill: React.FC<{ citation: Citation }> = ({ citation }) => (
 
 // ── Chat message bubble ───────────────────────────────────────────────────────
 const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
+  const { isTechMode } = useAppContext();
+  
   if (message.role === 'user') {
     return (
       <div className="flex flex-col items-end gap-2 max-w-[80%] self-end">
-        <div className="bg-[#F5F5F5] text-[#212121] px-5 py-4 rounded-xl rounded-tr-none border border-[#E0E0E0]">
-          <p className="text-[14px] leading-[1.5]">{message.content}</p>
+        <div className="bg-[#F5F5F5] text-[#212121] px-5 py-3 rounded-xl rounded-tr-none border border-[#E0E0E0]">
+          <p className={`${isTechMode ? 'text-[12px]' : 'text-[14px]'} leading-[1.5]`}>{message.content}</p>
         </div>
       </div>
     );
   }
   return (
-    <div className="flex flex-col items-start gap-3 max-w-[85%] self-start">
+    <div className="flex flex-col items-start gap-3 max-w-[90%] md:max-w-[85%] self-start">
       <div className="flex items-center gap-2 mb-1">
         <div className="w-6 h-6 bg-[#004D40] rounded flex items-center justify-center">
           <span className="material-symbols-outlined text-white text-sm" style={{fontVariationSettings:"'FILL' 1"}}>smart_toy</span>
         </div>
         <span className="text-xs text-[#004D40] font-bold" style={{fontFamily:'JetBrains Mono, monospace'}}>Industrial Copilot</span>
+        {message.confidence_score !== undefined && (
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${message.confidence_score > 0.8 ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'bg-[#FFF3E0] text-[#ED6C02]'}`}>
+            {Math.round(message.confidence_score * 100)}% CONF
+          </span>
+        )}
       </div>
-      <div className="bg-white text-[#212121] px-6 py-5 border-l-4 border-[#004D40] border border-[#E0E0E0] shadow-sm relative overflow-hidden rounded-r-lg">
-        <p className="text-[16px] leading-[1.6] whitespace-pre-wrap">{message.content}</p>
+      <div className="bg-white text-[#212121] px-4 py-3 md:px-6 md:py-5 border-l-4 border-[#004D40] border border-[#E0E0E0] shadow-sm relative overflow-hidden rounded-r-lg">
+        <p className={`${isTechMode ? 'text-[14px]' : 'text-[16px]'} leading-[1.6] whitespace-pre-wrap`}>{message.content}</p>
         {message.citations && message.citations.length > 0 && (
           <div className="pt-3 flex flex-wrap gap-2 mt-2">
             {message.citations.map((c, i) => <CitationPill key={i} citation={c} />)}
@@ -46,6 +54,7 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
 
 // ── Copilot Page ─────────────────────────────────────────────────────────────
 const CopilotPage: React.FC = () => {
+  const { isTechMode } = useAppContext();
   const [messages, setMessages] = useState<ChatMessage[]>([{
     role: 'assistant',
     content: "Hello! I'm the Industrial Knowledge Copilot. Ask me anything about your assets, maintenance procedures, or operational data. I will ground my answers in your indexed documents.",
@@ -68,7 +77,7 @@ const CopilotPage: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await sendChatMessage(q);
-      setMessages(p => [...p, { role: 'assistant', content: res.answer, citations: res.citations }]);
+      setMessages(p => [...p, { role: 'assistant', content: res.answer, citations: res.citations, confidence_score: res.confidence_score }]);
     } catch (e: unknown) {
       setMessages(p => [...p, { role: 'assistant', content: `⚠ Backend unavailable: ${e instanceof Error ? e.message : 'Unknown error'}`, citations: [] }]);
     } finally { setIsLoading(false); }
@@ -82,18 +91,16 @@ const CopilotPage: React.FC = () => {
     let successCount = 0;
     try {
       for (let i = 0; i < files.length; i++) {
-        // Skip hidden files or unsupported extensions if needed, but for now just upload all
         await uploadDocument(files[i]);
         successCount++;
         setUploadStatus(`Uploaded ${successCount}/${files.length}…`);
       }
       setUploadStatus(`✓ Uploaded ${successCount} file(s) successfully.`);
     } catch { 
-      setUploadStatus('✗ Upload failed. Ensure the API is running.'); 
+      setUploadStatus('✗ Upload failed.'); 
     }
     
     setTimeout(() => setUploadStatus(null), 5000);
-    // Reset inputs
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (folderInputRef.current) folderInputRef.current.value = '';
   };
@@ -102,13 +109,13 @@ const CopilotPage: React.FC = () => {
     <div className="flex h-screen overflow-hidden bg-white" style={{fontFamily:'Inter,sans-serif'}}>
       <Sidebar />
       {/* Main content */}
-      <main className="fixed top-0 right-0 w-[calc(100%-240px)] h-full flex flex-col bg-white">
+      <main className={`fixed top-0 right-0 w-full ${isTechMode ? 'md:w-[calc(100%-80px)]' : 'md:w-[calc(100%-240px)]'} h-full flex flex-col bg-white transition-all duration-300 pb-16 md:pb-0`}>
         {/* Topbar */}
         <header className="h-14 w-full bg-white border-b border-[#E0E0E0] flex items-center justify-between px-[16px] z-40 flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[#004D40]">settings_input_component</span>
-              <span className="text-[#004D40] font-bold text-[13px]" style={{fontFamily:'JetBrains Mono,monospace'}}>Industrial Copilot</span>
+              <span className="text-[#004D40] font-bold text-[13px] hidden md:inline" style={{fontFamily:'JetBrains Mono,monospace'}}>Industrial Copilot</span>
             </div>
             {uploadStatus && (
               <div className="flex items-center gap-1.5 bg-[#004D40]/10 px-2 py-0.5 rounded border border-[#004D40]/20">

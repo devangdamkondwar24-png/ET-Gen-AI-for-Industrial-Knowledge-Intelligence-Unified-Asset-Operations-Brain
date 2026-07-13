@@ -127,6 +127,7 @@ def find_procedures(state: ComplianceState) -> ComplianceState:
 # ───────────────────────────────────────────────
 
 GAP_PROMPT = """You are a regulatory compliance specialist for an industrial plant.
+You must strictly cross-reference findings against Indian regulatory frameworks, specifically the Factories Act 1948, OISD (Oil Industry Safety Directorate), and PESO (Petroleum and Explosives Safety Organisation).
 
 === REGULATIONS TO AUDIT ===
 {regulations}
@@ -150,12 +151,14 @@ Return ONLY a valid JSON array, where each object represents one compliance gap 
     "evidence_doc_ids": ["doc_id that supports compliance, if any"],
     "gap_description": "Describe the gap or confirm compliance",
     "severity": "Critical | High | Medium | Low | None",
-    "recommended_action": "What must be done to close the gap"
+    "recommended_action": "What must be done to close the gap",
+    "confidence_score": 0.95
   }}
 ]
 
 Do NOT invent evidence. If a document clearly addresses a regulation, mark it COMPLIANT.
 If no documents address it at all, mark it MISSING.
+Ensure `confidence_score` is a float between 0.0 and 1.0 reflecting your certainty based on the provided evidence.
 """
 
 

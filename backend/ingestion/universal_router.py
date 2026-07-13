@@ -259,6 +259,21 @@ def route_and_parse(file_bytes: bytes, filename: str, extra_metadata: dict = Non
         return result
 
     elif doc_type in ("pdf", "image", "unknown"):
+        # Check if it's a P&ID image for heuristic parsing
+        if doc_type == "image" and ("pid" in filename.lower() or "p&id" in filename.lower() or "drawing" in filename.lower()):
+            from ingestion.pid_parser import parse_pid_heuristic
+            heuristic_text = parse_pid_heuristic(file_bytes, filename)
+            
+            # Still run through Tika/OCR for any text labels, but prepend the heuristic topology
+            parsed = _parse_via_tika(file_bytes, filename, doc_type, provenance)
+            parsed.full_text = heuristic_text + "\n\n" + parsed.full_text
+            if parsed.pages:
+                parsed.pages[0]["text"] = heuristic_text + "\n\n" + parsed.pages[0]["text"]
+            else:
+                parsed.pages = [{"page_num": 1, "text": heuristic_text, "metadata": {"heuristic": True}}]
+                parsed.page_count = 1
+            return parsed
+
         # PDF with text layer or scanned image — Tika handles both,
         # the OCR worker picks up the pieces if text is too short.
         return _parse_via_tika(file_bytes, filename, doc_type, provenance)

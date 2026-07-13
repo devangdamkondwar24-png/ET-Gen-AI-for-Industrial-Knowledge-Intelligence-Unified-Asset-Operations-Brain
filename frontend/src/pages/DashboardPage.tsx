@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import { useAppContext } from '../context/AppContext';
 
 const DashboardPage: React.FC = () => {
+  const { isTechMode } = useAppContext();
   const [timeStr, setTimeStr] = useState('');
   useEffect(() => {
     const it = setInterval(() => {
@@ -14,12 +16,12 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="flex h-screen overflow-hidden bg-[#FAFAFA]" style={{fontFamily:'Inter,sans-serif'}}>
       <Sidebar />
-      <main className="fixed top-0 right-0 w-[calc(100%-240px)] h-full flex flex-col">
+      <main className={`fixed top-0 right-0 w-full ${isTechMode ? 'md:w-[calc(100%-80px)]' : 'md:w-[calc(100%-240px)]'} h-full flex flex-col transition-all duration-300 pb-16 md:pb-0`}>
         {/* Header */}
-        <header className="h-14 bg-white border-b border-[#E0E0E0] flex items-center justify-between px-[24px] w-full z-20">
+        <header className="h-14 bg-white border-b border-[#E0E0E0] flex items-center justify-between px-[16px] md:px-[24px] w-full z-20">
           <div className="flex items-center space-x-4">
             <span className="material-symbols-outlined text-[#004D40]">dashboard</span>
-            <h2 className="text-[18px] font-bold text-[#212121] uppercase tracking-tight">Plant Overview Dashboard</h2>
+            <h2 className="text-[16px] md:text-[18px] font-bold text-[#212121] uppercase tracking-tight">Plant Overview</h2>
           </div>
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-4">

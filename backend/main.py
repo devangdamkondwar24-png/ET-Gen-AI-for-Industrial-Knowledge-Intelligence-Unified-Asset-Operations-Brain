@@ -10,6 +10,7 @@ from api.search import router as search_router
 from api.chat import router as chat_router
 from api.agents import router as agents_router
 from api.graph import router as graph_router
+from api.reports import router as reports_router
 
 app = FastAPI(title="Industrial Knowledge Intelligence API")
 
@@ -27,6 +28,9 @@ app.include_router(search_router, prefix="/api", tags=["search"])
 app.include_router(chat_router, prefix="/api", tags=["chat"])
 app.include_router(agents_router)   # prefix defined in router
 app.include_router(graph_router)    # prefix defined in router
+app.include_router(reports_router)  # prefix defined in router
+from api.alerts import router as alerts_router
+app.include_router(alerts_router, tags=["alerts"])
 
 @app.get("/")
 async def root():

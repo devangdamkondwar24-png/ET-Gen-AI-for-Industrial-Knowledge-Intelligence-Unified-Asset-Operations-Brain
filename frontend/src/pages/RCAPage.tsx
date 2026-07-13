@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { runRcaAnalysis, type RCAResponse, type RCAHypothesis } from '../api/agents';
+import { useAppContext } from '../context/AppContext';
 
 // ── Confidence badge colors ────────────────────────────────────────────────────
 const confBadge: Record<string, string> = {
@@ -20,11 +21,11 @@ const HypCard: React.FC<{hyp: RCAHypothesis; active: boolean; onClick: ()=>void}
         {hyp.confidence_label} CONFIDENCE
       </div>
     </div>
-    <h4 className="text-[18px] font-semibold text-[#212121] mb-1" style={{lineHeight:1.4}}>{hyp.title}</h4>
-    <p className="text-[#757575] text-[13px] mb-4 leading-[1.5]">{hyp.description}</p>
+    <h4 className="text-[16px] md:text-[18px] font-semibold text-[#212121] mb-1" style={{lineHeight:1.4}}>{hyp.title}</h4>
+    <p className="text-[#757575] text-[12px] md:text-[13px] mb-4 leading-[1.5]">{hyp.description}</p>
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <div className="w-32 h-1.5 bg-[#E0E0E0] rounded-full overflow-hidden">
+        <div className="w-24 md:w-32 h-1.5 bg-[#E0E0E0] rounded-full overflow-hidden">
           <div className="bg-[#004D40] h-full" style={{width:`${hyp.confidence}%`}}/>
         </div>
         <span className="text-[#004D40] text-[12px]" style={{fontFamily:'JetBrains Mono,monospace'}}>{hyp.confidence}%</span>
@@ -36,6 +37,7 @@ const HypCard: React.FC<{hyp: RCAHypothesis; active: boolean; onClick: ()=>void}
 
 // ── RCA Page ──────────────────────────────────────────────────────────────────
 const RCAPage: React.FC = () => {
+  const { isTechMode } = useAppContext();
   const [assetId, setAssetId] = useState('P-101');
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ const RCAPage: React.FC = () => {
     <div className="flex h-screen overflow-hidden" style={{fontFamily:'Inter,sans-serif', background:'#FFFFFF', color:'#212121'}}>
       <Sidebar />
       {/* Header */}
-      <header className="fixed top-0 right-0 w-[calc(100%-240px)] h-12 bg-white border-b border-[#E0E0E0] flex justify-between items-center px-[24px] z-10">
+      <header className={`fixed top-0 right-0 w-full ${isTechMode ? 'md:w-[calc(100%-80px)]' : 'md:w-[calc(100%-240px)]'} h-12 bg-white border-b border-[#E0E0E0] flex justify-between items-center px-[16px] md:px-[24px] z-10 transition-all duration-300`}>
         <div className="flex items-center gap-4">
           <span className="material-symbols-outlined text-[#004D40]">search</span>
           <span className="text-[14px] text-[#616161]">RCA Report: {assetId || '—'}</span>
@@ -76,7 +78,7 @@ const RCAPage: React.FC = () => {
       </header>
 
       {/* Main */}
-      <main className="ml-[240px] pt-12 min-h-screen p-[24px] bg-white flex flex-col">
+      <main className={`w-full ${isTechMode ? 'md:ml-[80px]' : 'md:ml-[240px]'} pt-12 min-h-screen p-[16px] md:p-[24px] bg-white flex flex-col transition-all duration-300 pb-20 md:pb-0`}>
         {/* Query bar (new for interactive version) */}
         <div className="mb-[16px] flex items-end gap-3 pb-4 border-b border-[#E0E0E0]">
           <div className="flex flex-col gap-1">
