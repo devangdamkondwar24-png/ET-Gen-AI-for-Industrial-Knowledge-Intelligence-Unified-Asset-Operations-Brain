@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
 
 interface SearchResult {
   title: string;
   doc_type: string;
+  doc_format?: string;
   linked_asset: string;
-  page: number;
+  page: number | string;
   snippet: string;
   confidence: number;
   indexed_ago: string;
@@ -16,70 +16,79 @@ const DEMO_RESULTS: SearchResult[] = [
   {
     title: 'OISD-STD-105: Work Permit System',
     doc_type: 'OISD Manual',
+    doc_format: 'PDF',
     linked_asset: 'Pump P-101',
-    page: 42,
-    snippet: 'A Hot Work Permit must be issued before any welding or cutting operations in a hazardous area. The permit is valid for a maximum of 24 hours and must be renewed daily.',
+    page: 'Page 42',
+    snippet: '...failure to comply with the Work Permit System protocol before maintenance on Pump P-101 can result in pressurized release...',
     confidence: 0.98,
     indexed_ago: '24h ago',
-    highlight: 'Hot Work Permit',
+    highlight: 'Work Permit System,Pump P-101',
   },
   {
-    title: 'Factories Act 1948 — Chapter IV: Safety',
-    doc_type: 'Regulatory',
-    linked_asset: 'Plant General',
-    page: 21,
-    snippet: 'Section 21 mandates that every dangerous part of machinery shall be securely fenced by safeguards of substantial construction kept in position while the machinery is in motion.',
-    confidence: 0.94,
-    indexed_ago: '3d ago',
-    highlight: 'fenced by safeguards',
-  },
-  {
-    title: 'Pump P-101 Maintenance Manual Rev. C',
-    doc_type: 'Technical Manual',
-    linked_asset: 'Pump P-101',
-    page: 7,
-    snippet: 'Bearing temperature must not exceed 85°C during continuous operation. If temperature exceeds 80°C, reduce load and inspect lubrication immediately.',
-    confidence: 0.87,
-    indexed_ago: '12h ago',
-    highlight: '85°C',
-  },
-  {
-    title: 'Incident Report — INC-2024-072',
-    doc_type: 'Incident Report',
+    title: 'API 570: Piping Inspection Code',
+    doc_type: 'Standard',
+    doc_format: 'DOCX',
     linked_asset: 'Tank T-502',
-    page: 3,
-    snippet: 'Pressure drop event on 14-Jan-2024. Root cause identified as blocked suction strainer on Pump P-101. Corrective action: strainer cleaned and standby pump activated.',
-    confidence: 0.91,
-    indexed_ago: '7d ago',
-    highlight: 'blocked suction strainer',
+    page: 'Annex B-1',
+    snippet: 'Visual inspection for external corrosion on the base of Tank T-502 must adhere to the Piping Inspection Code frequency specified...',
+    confidence: 0.82,
+    indexed_ago: '15m ago',
+    highlight: 'Tank T-502,Piping Inspection Code',
+  },
+  {
+    title: 'ISO-9001: Quality Systems Manual',
+    doc_type: 'Internal Document',
+    doc_format: 'PDF',
+    linked_asset: 'Plant-Wide',
+    page: 'Section 7.4',
+    snippet: '...documentation for all Compliance audits must be stored within the evidence locker...',
+    confidence: 0.65,
+    indexed_ago: '2d ago',
+    highlight: 'Compliance',
   },
 ];
 
-const DOC_TYPE_COLORS: Record<string, string> = {
-  'OISD Manual': 'text-[#00f0ff] border-[#00f0ff]/40 bg-[#00f0ff]/10',
-  'Regulatory': 'text-[#ffd602] border-[#ffd602]/40 bg-[#ffd602]/10',
-  'Technical Manual': 'text-[#ffb77f] border-[#ffb77f]/40 bg-[#ffb77f]/10',
-  'Incident Report': 'text-[#ffb4ab] border-[#ffb4ab]/40 bg-[#ffb4ab]/10',
+const getDocTypeStyles = (type: string) => {
+  switch (type) {
+    case 'OISD Manual': return 'bg-secondary-container/20 border-secondary-container text-secondary';
+    case 'Standard': return 'bg-tertiary-container/20 border-tertiary-container text-tertiary-fixed-dim';
+    case 'Internal Document': return 'bg-primary-container/10 border-primary-container/30 text-on-surface-variant';
+    default: return 'bg-surface-container-highest border-outline-variant text-on-surface-variant';
+  }
 };
 
-const ConfBadge: React.FC<{ score: number }> = ({ score }) => {
-  const pct = Math.round(score * 100);
-  const color = score > 0.9 ? 'text-[#4caf50] bg-[#4caf50]/10 border-[#4caf50]/30' : score > 0.7 ? 'text-[#ffd602] bg-[#ffd602]/10 border-[#ffd602]/30' : 'text-[#ffb4ab] bg-[#ffb4ab]/10 border-[#ffb4ab]/30';
-  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border font-mono ${color}`}>{pct}% CONF</span>;
+const getConfStyles = (score: number) => {
+  if (score > 0.9) return 'text-primary-container';
+  if (score > 0.7) return 'text-on-surface';
+  return 'text-error';
 };
 
-const highlightSnippet = (text: string, term?: string) => {
-  if (!term) return <span>{text}</span>;
-  const parts = text.split(new RegExp(`(${term})`, 'gi'));
-  return (
-    <>
-      {parts.map((p, i) =>
-        p.toLowerCase() === term.toLowerCase()
-          ? <mark key={i} className="bg-[#00f0ff]/20 text-[#00f0ff] not-italic px-0.5 rounded">{p}</mark>
-          : <span key={i}>{p}</span>
-      )}
-    </>
-  );
+const highlightSnippet = (text: string, terms?: string) => {
+  if (!terms) return <span>{text}</span>;
+  const termList = terms.split(',');
+  let parts: (string | React.ReactElement)[] = [text];
+
+  termList.forEach(term => {
+    const newParts: (string | React.ReactElement)[] = [];
+    parts.forEach(part => {
+      if (typeof part === 'string') {
+        const regex = new RegExp(`(${term.trim()})`, 'gi');
+        const split = part.split(regex);
+        split.forEach((s, i) => {
+          if (s.toLowerCase() === term.trim().toLowerCase()) {
+            newParts.push(<span key={s + i} className="text-primary-container font-bold underline cyan-glow-text">{s}</span>);
+          } else {
+            newParts.push(s);
+          }
+        });
+      } else {
+        newParts.push(part);
+      }
+    });
+    parts = newParts;
+  });
+
+  return <>{parts.map((p, i) => <React.Fragment key={i}>{p}</React.Fragment>)}</>;
 };
 
 const EvidenceSearchPage: React.FC = () => {
@@ -92,7 +101,6 @@ const EvidenceSearchPage: React.FC = () => {
     if (!query.trim()) return;
     setLoading(true);
     setSubmitted(query.trim());
-    // Simulate search delay
     setTimeout(() => {
       setResults(DEMO_RESULTS);
       setLoading(false);
@@ -100,114 +108,115 @@ const EvidenceSearchPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#121416]" style={{ fontFamily: 'Inter, sans-serif' }}>
-      <Sidebar />
-      <main className="fixed top-0 right-0 w-full md:w-[calc(100%-240px)] h-full flex flex-col transition-all duration-300 pb-16 md:pb-0">
-        {/* Header */}
-        <header className="h-14 bg-[#1a1c1e] border-b border-[#333537] flex items-center justify-between px-4 md:px-6 z-20 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#00f0ff]">manage_search</span>
-            <span className="text-[#00f0ff] font-bold text-[13px] hidden md:inline" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-              EVIDENCE SEARCH
-            </span>
+    <div className="flex-1 relative z-10 max-w-5xl mx-auto w-full px-margin-mobile md:px-margin-desktop py-base h-full overflow-y-auto hide-scrollbar pb-32">
+      {/* Search Header */}
+      <section className="mt-margin-mobile md:mt-8 mb-gutter">
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <span className="material-symbols-outlined text-outline group-focus-within:text-primary-container transition-colors">search</span>
           </div>
-          <span className="text-[10px] text-[#849495] font-mono">{results.length > 0 ? `${results.length} RESULTS` : 'READY'}</span>
-        </header>
-
-        {/* Search bar */}
-        <div className="bg-[#1a1c1e] border-b border-[#333537] px-4 md:px-6 py-4">
-          <div className="max-w-3xl mx-auto flex gap-3 items-center">
-            <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#849495]">search</span>
-              <input
-                id="evidence-search-input"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder="Search documents, manuals, or assets..."
-                className="w-full bg-[#0c0e10] border border-[#333537] rounded text-[#e2e2e5] pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#00f0ff] transition-all"
-              />
-            </div>
-            <button
-              id="evidence-search-btn"
-              onClick={handleSearch}
-              disabled={loading}
-              className="bg-[#00f0ff] text-[#002022] px-5 py-3 rounded font-bold text-sm font-mono flex items-center gap-2 hover:bg-[#00dbe9] active:scale-95 transition-all disabled:opacity-50"
-            >
-              {loading ? <span className="material-symbols-outlined text-sm animate-spin">sync</span> : <span className="material-symbols-outlined text-sm">search</span>}
-              SEARCH
-            </button>
+          <input 
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            className="w-full bg-surface-container-lowest border border-outline-variant h-[56px] pl-14 pr-4 font-label-md text-label-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all" 
+            placeholder="Search documents, manuals, or assets..." 
+            type="text"
+          />
+          <div className="absolute top-0 right-4 h-full flex items-center pointer-events-none">
+            <span className="text-[10px] font-label-sm text-outline-variant uppercase tracking-widest">Input_Active</span>
           </div>
         </div>
+        <div className="flex flex-wrap gap-2 mt-4">
+          <span className="px-2 py-1 bg-surface-container border border-outline-variant text-[10px] font-label-sm text-outline uppercase cursor-pointer hover:border-primary-container" onClick={() => setQuery('OISD-STD-105')}>Recent: OISD-STD-105</span>
+          <span className="px-2 py-1 bg-surface-container border border-outline-variant text-[10px] font-label-sm text-outline uppercase cursor-pointer hover:border-primary-container" onClick={() => setQuery('Valve-A22')}>Recent: Valve-A22</span>
+          <span className="px-2 py-1 bg-surface-container border border-outline-variant text-[10px] font-label-sm text-outline uppercase cursor-pointer hover:border-primary-container">Filter: Manuals Only</span>
+        </div>
+      </section>
 
-        {/* Results */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6">
-          {loading && (
-            <div className="flex justify-center py-12">
-              <span className="text-[#849495] text-sm font-mono animate-pulse">SEARCHING KNOWLEDGE BASE...</span>
-            </div>
-          )}
+      {/* States */}
+      {loading && (
+        <div className="flex justify-center py-12">
+          <div className="flex gap-2 items-center">
+            <span className="w-2 h-2 bg-primary-container animate-pulse rounded-full"></span>
+            <span className="text-outline-variant font-label-md uppercase tracking-widest">QUERYING INDEX...</span>
+          </div>
+        </div>
+      )}
 
-          {!loading && results.length === 0 && submitted && (
-            <div className="flex flex-col items-center py-12 gap-3">
-              <span className="material-symbols-outlined text-[#333537] text-5xl">search_off</span>
-              <p className="text-[#849495] text-sm font-mono">NO RESULTS FOR "{submitted}"</p>
-            </div>
-          )}
+      {!loading && results.length === 0 && submitted && (
+        <div className="flex flex-col items-center py-12 gap-3">
+          <span className="material-symbols-outlined text-outline-variant text-5xl">search_off</span>
+          <p className="text-outline-variant font-label-md uppercase tracking-widest">NO RESULTS FOR "{submitted}"</p>
+        </div>
+      )}
 
-          {!loading && results.length === 0 && !submitted && (
-            <div className="flex flex-col items-center py-16 gap-4">
-              <span className="material-symbols-outlined text-[#333537] text-6xl">find_in_page</span>
-              <p className="text-[#849495] font-mono text-sm uppercase tracking-widest">Search documents, incidents, manuals</p>
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {['OISD permit system', 'pump P-101 maintenance', 'Factories Act Section 21', 'pressure drop incident'].map(s => (
-                  <button key={s} onClick={() => { setQuery(s); }} className="border border-[#333537] text-[#b9cacb] px-3 py-1.5 rounded text-xs font-mono hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all">
-                    {s}
-                  </button>
-                ))}
+      {/* Search Results List */}
+      {!loading && results.length > 0 && (
+        <div className="flex flex-col gap-4">
+          {results.map((r, i) => (
+            <div key={i} className="bg-surface-container-low border border-outline-variant p-4 cursor-pointer hover:border-primary-container transition-all group card-hover-fx relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-1">
+                <span className="font-label-sm text-[9px] text-outline-variant opacity-50">MOD-SEARCH-00{i+1}</span>
               </div>
-            </div>
-          )}
-
-          {!loading && results.length > 0 && (
-            <div className="max-w-3xl mx-auto flex flex-col gap-4">
-              {results.map((r, i) => (
-                <div key={i} className="bg-[#1a1c1e] border border-[#333537] rounded hover:border-[#00f0ff]/50 transition-all group">
-                  <div className="p-4">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border font-mono ${DOC_TYPE_COLORS[r.doc_type] || 'text-[#b9cacb] border-[#333537]'}`}>
-                        {r.doc_type}
-                      </span>
-                      <span className="text-[10px] text-[#849495] border border-[#333537] px-2 py-0.5 rounded font-mono">
-                        {r.linked_asset}
-                      </span>
-                      <span className="text-[10px] text-[#849495] border border-[#333537] px-2 py-0.5 rounded font-mono">
-                        p.{r.page}
-                      </span>
-                      <ConfBadge score={r.confidence} />
-                    </div>
-                    <h3 className="text-[#e2e2e5] font-bold text-sm mb-2 group-hover:text-[#00f0ff] transition-colors">{r.title}</h3>
-                    <p className="text-[#b9cacb] text-xs leading-relaxed">
-                      {highlightSnippet(r.snippet, r.highlight)}
-                    </p>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#282a2c]">
-                      <span className="text-[10px] text-[#849495] font-mono">INDEXED: {r.indexed_ago}</span>
-                      <div className="flex gap-2">
-                        <button className="text-[10px] text-[#849495] border border-[#333537] px-3 py-1 rounded font-mono hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all">
-                          OPEN DOC
-                        </button>
-                        <button className="text-[10px] text-[#849495] border border-[#333537] px-3 py-1 rounded font-mono hover:border-[#00f0ff] hover:text-[#00f0ff] transition-all">
-                          ADD TO RCA
-                        </button>
-                      </div>
-                    </div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 gap-2">
+                <h3 className="font-headline-md text-headline-md text-primary-container leading-tight">{r.title}</h3>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 border text-[10px] font-label-md uppercase tracking-wider ${getDocTypeStyles(r.doc_type)}`}>
+                    {r.doc_type}
+                  </span>
+                  {r.doc_format && (
+                    <span className="px-2 py-0.5 bg-surface-container-highest border border-outline-variant text-on-surface-variant text-[10px] font-label-md uppercase tracking-wider">
+                      {r.doc_format}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-outline text-[18px]">
+                    {r.linked_asset.includes('Pump') ? 'settings_input_component' : r.linked_asset.includes('Tank') ? 'hub' : 'verified_user'}
+                  </span>
+                  <span className="text-on-surface-variant font-label-sm text-label-sm uppercase">Linked Asset: <span className="text-on-surface font-bold">{r.linked_asset}</span></span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-outline text-[18px]">menu_book</span>
+                  <span className="text-on-surface-variant font-label-sm text-label-sm uppercase">Reference: <span className="text-on-surface font-bold">{r.page}</span></span>
+                </div>
+              </div>
+              <div className={`bg-surface-container-lowest border-l-2 p-3 mb-4 ${i === 0 ? 'border-primary-container' : 'border-outline-variant'}`}>
+                <p className="text-on-surface-variant font-body-md leading-relaxed italic">
+                  {highlightSnippet(r.snippet, r.highlight)}
+                </p>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-outline-variant">
+                <div className="flex gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-outline uppercase font-label-sm">Confidence Score</span>
+                    <span className={`font-label-md text-label-md ${getConfStyles(r.confidence)}`}>{Math.round(r.confidence * 100)}%</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-outline uppercase font-label-sm">Last Indexed</span>
+                    <span className="text-on-surface font-label-md text-label-md">{r.indexed_ago}</span>
                   </div>
                 </div>
-              ))}
+                <span className="material-symbols-outlined text-outline group-hover:text-primary-container group-hover:translate-x-1 transition-all">chevron_right</span>
+              </div>
             </div>
-          )}
+          ))}
+
+          {/* System Pagination */}
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="h-[1px] flex-1 bg-outline-variant"></div>
+            <div className="px-4 py-2 border border-outline-variant font-label-sm text-label-sm text-outline flex items-center gap-4">
+              <button className="hover:text-primary-container">PREV</button>
+              <span className="text-primary-container">01 / 14</span>
+              <button className="hover:text-primary-container">NEXT</button>
+            </div>
+            <div className="h-[1px] flex-1 bg-outline-variant"></div>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
 };
