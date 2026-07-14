@@ -14,7 +14,7 @@ def normalize_text(text: str) -> str:
     # Strip leading/trailing whitespace
     return text.strip()
 
-def chunk_text(text: str, max_chunk_size: int = 1000, overlap: int = 150) -> list[str]:
+def chunk_text(text: str, max_chunk_size: int = 800, overlap: int = 200) -> list[str]:
     """
     Chunks text by paragraph, then sentence, falling back to character limits.
     """

@@ -26,9 +26,16 @@ class DocumentStorage:
         try:
             self.s3_client.head_bucket(Bucket=self.bucket_name)
         except ClientError as e:
-            error_code = e.response['Error']['Code']
+            error_code = e.response.get('Error', {}).get('Code', '')
             if error_code == '404':
-                self.s3_client.create_bucket(Bucket=self.bucket_name)
+                try:
+                    self.s3_client.create_bucket(Bucket=self.bucket_name)
+                except ClientError as create_e:
+                    create_code = create_e.response.get('Error', {}).get('Code', '')
+                    if create_code in ['BucketAlreadyOwnedByYou', 'BucketAlreadyExists']:
+                        pass
+                    else:
+                        print(f"[Storage] Error creating bucket: {create_e}")
             else:
                 print(f"[Storage] Error checking bucket: {e}")
 

@@ -17,7 +17,7 @@ class ChatRequest(BaseModel):
     question: str
     plant: Optional[str] = None
     asset_tag: Optional[str] = None
-    top_k: int = 15
+    top_k: int = 9
 
 class SourceChunk(BaseModel):
     chunk_id: str
@@ -43,17 +43,21 @@ def build_rag_prompt(question: str, context_chunks: list) -> str:
             f"{chunk['text_snippet']}\n"
         )
 
-    prompt = f"""You are an expert Industrial Knowledge Assistant.
-Answer the question ONLY using the provided context below. If the context does not contain the answer, you MUST say exactly "I cannot verify the answer with high confidence based on the available documents."
+    prompt = f"""You are an expert Industrial Knowledge Assistant. Your job is to extract factual answers directly from the provided context documents.
 
-Provide a highly detailed and comprehensive answer. You MUST include all specific numbers, dates, emails, quantities, and Work Order IDs (e.g., WO-XXXX) found in the context that relate to the question.
+STRICT RULES:
+1. Answer ONLY using facts explicitly stated in the CONTEXT below. Do NOT infer, calculate, or guess.
+2. If a context chunk contains a pre-computed summary value (e.g. "Total Downtime Hours - P-101 = 26"), use that value directly. Do NOT recalculate it from individual records.
+3. Always include specific numbers, dates, Work Order IDs (WO-XXXX), equipment tags, and names exactly as they appear.
+4. If the documents do not contain the information to answer a factual question, you can state that the information is missing. For example, if asked if a document is referenced somewhere, and it is not, say "No, there is no mention of X in the provided documents." instead of refusing to answer. If you are completely unable to formulate any helpful answer, only then respond with: "I cannot verify the answer with high confidence based on the available documents."
+5. Do NOT perform arithmetic or add up values yourself unless explicitly asked to calculate.
 
 CONTEXT:
 {context_block}
 
 QUESTION: {question}
 
-ANSWER:"""
+ANSWER (cite the exact source value from context):"""
     return prompt
 
 @router.post("/chat", response_model=ChatResponse)
@@ -89,7 +93,7 @@ async def chat(request: ChatRequest):
     # Fallback Rule: If the best match has a low score, reject answering.
     # kNN cosine similarity scores are between 0.0 and 1.0. Threshold at 0.5.
     top_score = search_response.results[0].score
-    if top_score < 0.5:
+    if top_score < 0.35:
         return ChatResponse(
             answer="I cannot verify the answer with high confidence based on the available documents.",
             sources=[],
@@ -121,7 +125,8 @@ async def chat(request: ChatRequest):
                     "stream": False,
                     "options": {
                         "temperature": 0.1,
-                        "num_predict": 512
+                        "num_predict": 512,
+                        "num_ctx": 4096
                     }
                 }
             )

@@ -1,8 +1,17 @@
+# ---- Build Stage ----
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
 # ---- Serve Stage ----
 FROM nginx:alpine AS runner
 
-# Copy built files from the HOST to nginx web root
-COPY ./dist /usr/share/nginx/html
+# Copy built files from the builder stage to nginx web root
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Custom nginx config to support client-side routing (React Router)
 RUN echo 'server { \
