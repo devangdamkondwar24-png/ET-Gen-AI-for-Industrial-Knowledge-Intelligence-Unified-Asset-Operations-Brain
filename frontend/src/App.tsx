@@ -4,6 +4,8 @@ import CopilotPage from './pages/CopilotPage';
 import RCAPage from './pages/RCAPage';
 import CompliancePage from './pages/CompliancePage';
 import LessonsPage from './pages/LessonsPage';
+import AssetsPage from './pages/AssetsPage';
+import ReportsPage from './pages/ReportsPage';
 import './index.css';
 
 function App() {
@@ -15,6 +17,8 @@ function App() {
         <Route path="/rca" element={<RCAPage />} />
         <Route path="/compliance" element={<CompliancePage />} />
         <Route path="/lessons" element={<LessonsPage />} />
+        <Route path="/assets" element={<AssetsPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
       </Routes>
     </BrowserRouter>
   );

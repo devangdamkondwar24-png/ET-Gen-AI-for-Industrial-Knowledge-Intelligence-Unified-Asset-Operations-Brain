@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 OLLAMA_URL   = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "mistral")
 ES_URL       = os.environ.get("ELASTICSEARCH_URL", "http://localhost:9200")
-ES_INDEX     = "industrial_chunks"
+ES_INDEX     = "etgen_documents_v2"
 
 
 # ───────────────────────────────────────────────
@@ -174,7 +174,7 @@ def detect_gaps(state: ComplianceState) -> ComplianceState:
         resp = httpx.post(
             f"{OLLAMA_URL}/api/generate",
             json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
-            timeout=180
+            timeout=600
         )
         resp.raise_for_status()
         raw = resp.json().get("response", "")

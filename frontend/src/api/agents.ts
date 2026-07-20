@@ -101,3 +101,50 @@ export const uploadDocument = async (file: File, assetTag?: string): Promise<{ j
   });
   return res.data;
 };
+
+// Dashboard
+export interface DashboardSummary {
+  system_health_pct: number;
+  services: { name: string; status: 'up' | 'down'; error?: string }[];
+  document_count: number;
+  equipment_count: number;
+  failure_count: number;
+  incident_count: number;
+  open_work_order_count: number;
+  non_conformance_count: number;
+  critical_alerts: { asset_id: string; failure: string; severity: string; failure_id: string }[];
+  pending_maintenance: { wo_id: string; title: string; priority: string; status: string; asset_id: string }[];
+}
+
+export const getDashboardSummary = async (): Promise<DashboardSummary> => {
+  const res = await apiClient.get('/api/dashboard/summary');
+  return res.data;
+};
+
+// Assets
+export interface AssetSummary {
+  asset_id: string;
+  name: string;
+  asset_type: string;
+  plant: string;
+  failure_count: number;
+  work_order_count: number;
+  incident_count: number;
+}
+
+export const getAssetsList = async (): Promise<{ assets: AssetSummary[]; total: number }> => {
+  const res = await apiClient.get('/api/assets');
+  return res.data;
+};
+
+// Reports
+export interface ReportSummary {
+  report_types: { id: string; title: string; description: string; icon: string; route: string }[];
+  insights: any[];
+  compliance_history: any[];
+}
+
+export const getReportsSummary = async (): Promise<ReportSummary> => {
+  const res = await apiClient.get('/api/reports');
+  return res.data;
+};
